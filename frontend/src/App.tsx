@@ -34,7 +34,8 @@ import {
   Sparkles,
   Layers,
   HelpCircle,
-  RefreshCw
+  RefreshCw,
+  AlertTriangle
 } from 'lucide-react';
 import { speechHelper } from './utils/speech';
 
@@ -56,15 +57,17 @@ export const App: React.FC = () => {
   const [location, setLocation] = useState<string>('Dharwad, Karnataka');
   const [zone, setZone] = useState<string>('Northern Transitional Zone');
 
-  // Step 2: Land Dimensions
+  // Step 2: Land Dimensions & Shapes
   const [areaAcres, setAreaAcres] = useState<number>(1.0);
   const [lengthM, setLengthM] = useState<number>(63.6);
   const [breadthM, setBreadthM] = useState<number>(63.6);
   const [orientation, setOrientation] = useState<string>('North-South');
+  const [shapeType, setShapeType] = useState<string>('Regular');
+  const [photoPreview, setPhotoPreview] = useState<string>('');
 
   // Step 3: Soil & Water
-  const [soilType, setSoilType] = useState<string>('Red Sandy Loam');
-  const [soilPh, setSoilPh] = useState<number>(6.8);
+  const [soilType, setSoilType] = useState<string>('Black Clay (Vertisol)');
+  const [soilPh, setSoilPh] = useState<number>(7.6);
   const [irrigation, setIrrigation] = useState<string>('Rainfed (Dryland)');
 
   // Step 4: Crops & Varieties
@@ -73,12 +76,16 @@ export const App: React.FC = () => {
   const [cropBId, setCropBId] = useState<number>(2);
   const [varietyBId, setVarietyBId] = useState<number>(3);
   const [rowRatio, setRowRatio] = useState<string>('2:1');
+  const [isCropPairValid, setIsCropPairValid] = useState<boolean>(true);
 
   // Step 5: Evaluation Results
   const [evaluation, setEvaluation] = useState<EvaluationResponse | null>(null);
   const [layout, setLayout] = useState<PlantingLayoutData | null>(null);
   const [resources, setResources] = useState<ResourceEstimationResponse | null>(null);
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
+
+  // Custom Compare Plans State
+  const [selectedPlansToCompare, setSelectedPlansToCompare] = useState<SavedPlan[] | null>(null);
 
   // Audio Speech state
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
@@ -117,11 +124,21 @@ export const App: React.FC = () => {
       setIsSpeaking(false);
     } else {
       let promptText = '';
-      if (currentStep === 1) promptText = 'Step 1: Choose season and your field district location.';
-      else if (currentStep === 2) promptText = `Step 2: Field is ${areaAcres} acres, length ${lengthM} meters, breadth ${breadthM} meters.`;
-      else if (currentStep === 3) promptText = `Step 3: Soil type is ${soilType}, with pH ${soilPh}.`;
-      else if (currentStep === 4) promptText = 'Step 4: Select primary and companion crops, and row proportion.';
-      else if (currentStep === 5 && evaluation) promptText = `Verdict: ${evaluation.verdict}. ${evaluation.verdict_summary}. Land Equivalent Ratio is ${evaluation.ler}.`;
+      if (navTab === 'compare') {
+        promptText = t('speech.compare');
+      } else if (navTab === 'saved') {
+        promptText = t('speech.saved');
+      } else if (navTab === 'admin') {
+        promptText = t('speech.admin');
+      } else {
+        if (currentStep === 1) promptText = t('speech.step1');
+        else if (currentStep === 2) promptText = t('speech.step2');
+        else if (currentStep === 3) promptText = t('speech.step3');
+        else if (currentStep === 4) promptText = t('speech.step4');
+        else if (currentStep === 5 && evaluation) {
+          promptText = t('speech.step5');
+        }
+      }
 
       setIsSpeaking(true);
       speechHelper.speak(promptText, i18n.language, () => setIsSpeaking(false));
@@ -130,6 +147,11 @@ export const App: React.FC = () => {
 
   // Run Evaluation & Layout Generation
   const handleRunEvaluation = async () => {
+    if (!isCropPairValid || cropAId === cropBId) {
+      alert(t('step4.same_crop_error'));
+      return;
+    }
+
     setIsEvaluating(true);
     try {
       const evalReq: EvaluateRequest = {
@@ -142,7 +164,9 @@ export const App: React.FC = () => {
           area_acres: areaAcres,
           length_m: lengthM,
           breadth_m: breadthM,
-          shape: 'Rectangular',
+          shape: shapeType,
+          shape_type: shapeType,
+          photo_preview: photoPreview || undefined,
           orientation,
           irrigation,
           soil_type: soilType,
@@ -242,6 +266,8 @@ export const App: React.FC = () => {
           length_m: lengthM,
           breadth_m: breadthM,
           orientation,
+          shape: shapeType,
+          shape_type: shapeType,
           soil_type: soilType,
           season
         }
@@ -264,10 +290,16 @@ export const App: React.FC = () => {
     setCurrentStep(5);
   };
 
+  // Compare multiple saved plans
+  const handleCompareSavedPlans = (plans: SavedPlan[]) => {
+    setSelectedPlansToCompare(plans);
+    setNavTab('compare');
+  };
+
   return (
     <div className="min-h-screen bg-[#faf8f5] text-stone-900 font-sans flex flex-col">
       {/* Top Navigation Header */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-stone-200 shadow-xs">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-xs">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           {/* Logo & Brand */}
           <div
@@ -281,7 +313,7 @@ export const App: React.FC = () => {
               <div className="flex items-center gap-1.5">
                 <span className="text-lg font-black tracking-tight text-stone-900">KrishiMix</span>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
-                  v1.0
+                  v1.1
                 </span>
               </div>
               <p className="text-[10px] text-stone-500 font-medium hidden sm:block">
@@ -294,7 +326,7 @@ export const App: React.FC = () => {
           <nav className="flex items-center gap-1 bg-stone-100 p-1 rounded-2xl border border-stone-200">
             <button
               type="button"
-              onClick={() => setNavTab('wizard')}
+              onClick={() => { setNavTab('wizard'); setSelectedPlansToCompare(null); }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
                 navTab === 'wizard'
                   ? 'bg-white text-emerald-800 shadow-xs'
@@ -345,20 +377,30 @@ export const App: React.FC = () => {
             </button>
           </nav>
 
-          {/* Right Action Tools: Language, Audio Read-Aloud, Offline Pill */}
+          {/* Right Action Tools: Prominent Audio Pill, Language Switcher, Offline Pill */}
           <div className="flex items-center gap-2">
-            {/* Audio Read-Aloud Button */}
+            {/* Functional Audio Listen / Stop Pill */}
             <button
               type="button"
               onClick={handleToggleSpeech}
-              className={`p-2 rounded-xl border transition flex items-center gap-1 text-xs font-bold ${
+              className={`px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 text-xs font-bold shadow-xs ${
                 isSpeaking
-                  ? 'bg-rose-50 border-rose-300 text-rose-700 animate-pulse'
-                  : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
+                  ? 'bg-rose-50 border-rose-300 text-rose-700 animate-pulse ring-2 ring-rose-400/30'
+                  : 'bg-emerald-50/90 border-emerald-300 text-emerald-800 hover:bg-emerald-100'
               }`}
-              title={isSpeaking ? 'Stop reading' : 'Read aloud page in audio'}
+              title={isSpeaking ? 'Stop reading audio' : 'Read aloud current screen in audio'}
             >
-              {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-emerald-700" />}
+              {isSpeaking ? (
+                <>
+                  <VolumeX className="w-4 h-4 text-rose-600" />
+                  <span>{t('nav.stop_audio')}</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-4 h-4 text-emerald-700" />
+                  <span className="hidden sm:inline">{t('nav.listen_page')}</span>
+                </>
+              )}
             </button>
 
             {/* Language Switcher */}
@@ -400,8 +442,19 @@ export const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6">
-        {navTab === 'compare' && <CompareView crops={crops} />}
-        {navTab === 'saved' && <SavedPlansView onLoadPlan={handleLoadPlan} />}
+        {navTab === 'compare' && (
+          <CompareView
+            crops={crops}
+            selectedPlansToCompare={selectedPlansToCompare}
+            onClearCustomCompare={() => setSelectedPlansToCompare(null)}
+          />
+        )}
+        {navTab === 'saved' && (
+          <SavedPlansView
+            onLoadPlan={handleLoadPlan}
+            onComparePlans={handleCompareSavedPlans}
+          />
+        )}
         {navTab === 'admin' && <AdminView />}
 
         {navTab === 'wizard' && (
@@ -410,7 +463,7 @@ export const App: React.FC = () => {
             <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs">
               <div className="flex items-center justify-between text-xs font-bold text-stone-500 mb-2">
                 <span>{t('wizard.step', { current: currentStep, total: 5 })}</span>
-                <span className="text-emerald-700">
+                <span className="text-emerald-700 font-extrabold">
                   {currentStep === 1 && t('wizard.step1_title')}
                   {currentStep === 2 && t('wizard.step2_title')}
                   {currentStep === 3 && t('wizard.step3_title')}
@@ -469,6 +522,8 @@ export const App: React.FC = () => {
                   setLocation={setLocation}
                   zone={zone}
                   setZone={setZone}
+                  setSoilType={setSoilType}
+                  setSoilPh={setSoilPh}
                 />
               )}
 
@@ -482,6 +537,10 @@ export const App: React.FC = () => {
                   setBreadthM={setBreadthM}
                   orientation={orientation}
                   setOrientation={setOrientation}
+                  shapeType={shapeType}
+                  setShapeType={setShapeType}
+                  photoPreview={photoPreview}
+                  setPhotoPreview={setPhotoPreview}
                 />
               )}
 
@@ -493,6 +552,7 @@ export const App: React.FC = () => {
                   setSoilPh={setSoilPh}
                   irrigation={irrigation}
                   setIrrigation={setIrrigation}
+                  autoSelectedSoil={true}
                 />
               )}
 
@@ -511,6 +571,7 @@ export const App: React.FC = () => {
                   setRowRatio={setRowRatio}
                   season={season}
                   soilType={soilType}
+                  setIsCropPairValid={setIsCropPairValid}
                 />
               )}
 
@@ -527,6 +588,7 @@ export const App: React.FC = () => {
                   cropBId={cropBId}
                   varietyBId={varietyBId}
                   rowRatio={rowRatio}
+                  onGoToCompare={() => setNavTab('compare')}
                 />
               )}
             </div>
@@ -558,9 +620,14 @@ export const App: React.FC = () => {
               {currentStep === 4 && (
                 <button
                   type="button"
-                  disabled={isEvaluating}
+                  disabled={isEvaluating || !isCropPairValid || cropAId === cropBId}
                   onClick={handleRunEvaluation}
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950 text-white text-sm font-black shadow-md transition"
+                  className={`inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl text-white text-sm font-black shadow-md transition ${
+                    !isCropPairValid || cropAId === cropBId
+                      ? 'bg-stone-400 cursor-not-allowed opacity-75'
+                      : 'bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950'
+                  }`}
+                  title={!isCropPairValid ? 'Crop A and Crop B cannot be identical' : 'Run intercrop agronomic evaluation'}
                 >
                   <Sparkles className={`w-4 h-4 text-amber-300 ${isEvaluating ? 'animate-spin' : ''}`} />
                   <span>{isEvaluating ? t('wizard.evaluating') : t('wizard.evaluate_now')}</span>

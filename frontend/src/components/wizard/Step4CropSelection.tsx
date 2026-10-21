@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Crop, Variety } from '../../types';
-import { Sparkles, Sprout, ArrowRight, Check, AlertCircle } from 'lucide-react';
+import { Sparkles, Sprout, ArrowRight, Check, AlertTriangle, Info, Sun, Clock, Zap } from 'lucide-react';
 import { fetchSuggestedCompanions } from '../../services/api';
 
 interface Step4Props {
@@ -18,6 +18,7 @@ interface Step4Props {
   setRowRatio: (r: string) => void;
   season: string;
   soilType: string;
+  setIsCropPairValid?: (valid: boolean) => void;
 }
 
 export const Step4CropSelection: React.FC<Step4Props> = ({
@@ -33,7 +34,8 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
   rowRatio,
   setRowRatio,
   season,
-  soilType
+  soilType,
+  setIsCropPairValid
 }) => {
   const { t } = useTranslation();
   const [isSuggesting, setIsSuggesting] = useState<boolean>(false);
@@ -44,6 +46,15 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
 
   const varietiesA = cropA ? cropA.varieties : [];
   const varietiesB = cropB ? cropB.varieties : [];
+
+  const isSameCrop = selectedCropAId === selectedCropBId;
+
+  // Inform parent whether pair is valid
+  React.useEffect(() => {
+    if (setIsCropPairValid) {
+      setIsCropPairValid(!isSameCrop);
+    }
+  }, [isSameCrop, setIsCropPairValid]);
 
   const handleCropAChange = (cId: number) => {
     setSelectedCropAId(cId);
@@ -82,20 +93,49 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
   };
 
   const rowRatios = [
-    { ratio: '2:1', label: '2:1 Ratio', desc: '2 rows Main Crop, 1 row Companion (Standard ICRISAT/UAS formula)' },
-    { ratio: '1:1', label: '1:1 Ratio', desc: 'Alternate single rows (High biodiversity and weed cover)' },
+    { ratio: '2:1', label: '2:1 Ratio', desc: '2 rows Main Crop, 1 row Companion (ICRISAT/UAS formula)' },
+    { ratio: '1:1', label: '1:1 Ratio', desc: 'Alternate single rows (Maximum weed suppression and soil cover)' },
     { ratio: '3:1', label: '3:1 Ratio', desc: '3 rows Groundnut / Millet, 1 row Pigeonpea' },
     { ratio: '4:2', label: '4:2 Ratio', desc: '4 rows Strip Intercrop, 2 rows Companion (Tractor operational spacing)' }
   ];
 
   return (
-    <div className="space-y-8 max-w-3xl mx-auto">
+    <div className="space-y-6 max-w-3xl mx-auto">
       <div className="text-center space-y-1">
         <h2 className="text-xl font-black text-stone-900">{t('step4.title')}</h2>
         <p className="text-xs text-stone-500">
           {t('step4.desc')}
         </p>
       </div>
+
+      {/* Simplified Agronomic Principles Guide */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-3.5 bg-stone-100/80 rounded-2xl border border-stone-200 text-xs">
+        <div className="flex items-center gap-2 text-stone-700">
+          <Sun className="w-4 h-4 text-amber-600 shrink-0" />
+          <span className="font-semibold">{t('step4.simple_terms.sunlight')}: Tall + Short</span>
+        </div>
+        <div className="flex items-center gap-2 text-stone-700">
+          <Clock className="w-4 h-4 text-sky-600 shrink-0" />
+          <span className="font-semibold">{t('step4.simple_terms.maturity')}: Fast + Slow harvest</span>
+        </div>
+        <div className="flex items-center gap-2 text-stone-700">
+          <Zap className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span className="font-semibold">{t('step4.simple_terms.fertilizer')}</span>
+        </div>
+      </div>
+
+      {/* Same Crop Validation Warning */}
+      {isSameCrop && (
+        <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl text-xs text-rose-950 flex items-start gap-3 shadow-xs">
+          <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+          <div>
+            <span className="font-extrabold block text-sm">{t('step4.same_crop_error')}</span>
+            <p className="mt-1 text-rose-800">
+              Growing two identical crops side-by-side in rows is not intercropping; it creates direct intra-species competition for sunlight, water, and nutrients. Please choose a pulse companion (like Pigeonpea or Cowpea).
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Primary Crop (Row A) */}
       <div className="bg-white p-5 rounded-2xl border-2 border-emerald-500/60 shadow-xs space-y-4">
@@ -109,7 +149,7 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
           </span>
         </div>
 
-        {/* Big Touch Target Crop Selector */}
+        {/* Crop Selector A */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           {crops.map((c) => {
             const isSelected = c.id === selectedCropAId;
@@ -181,7 +221,9 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
       </div>
 
       {/* Companion Crop (Row B) */}
-      <div className="bg-white p-5 rounded-2xl border-2 border-amber-500/60 shadow-xs space-y-4">
+      <div className={`bg-white p-5 rounded-2xl border-2 shadow-xs space-y-4 ${
+        isSameCrop ? 'border-rose-400 bg-rose-50/20' : 'border-amber-500/60'
+      }`}>
         <div className="flex items-center justify-between">
           <label className="text-xs font-black uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
             <Sprout className="w-4 h-4 text-amber-600" />
@@ -196,14 +238,19 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           {crops.map((c) => {
             const isSelected = c.id === selectedCropBId;
+            const isAlsoCropA = c.id === selectedCropAId;
             return (
               <button
                 key={c.id}
                 type="button"
                 onClick={() => handleCropBChange(c.id)}
-                className={`p-3 rounded-xl border-2 text-center transition font-bold text-xs shadow-xs ${
+                className={`p-3 rounded-xl border-2 text-center transition font-bold text-xs shadow-xs relative ${
                   isSelected
-                    ? 'border-amber-600 bg-amber-600 text-white shadow-sm ring-2 ring-amber-500/20'
+                    ? isAlsoCropA
+                      ? 'border-rose-500 bg-rose-600 text-white shadow-sm'
+                      : 'border-amber-600 bg-amber-600 text-white shadow-sm ring-2 ring-amber-500/20'
+                    : isAlsoCropA
+                    ? 'border-stone-200 bg-stone-100 text-stone-400 opacity-60'
                     : 'border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-800'
                 }`}
               >
@@ -211,6 +258,9 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
                 <div className={`text-[10px] font-normal ${isSelected ? 'text-amber-100' : 'text-stone-400'}`}>
                   {c.crop_type}
                 </div>
+                {isAlsoCropA && (
+                  <span className="text-[9px] block text-rose-200 font-bold mt-0.5">Selected as Crop A</span>
+                )}
               </button>
             );
           })}

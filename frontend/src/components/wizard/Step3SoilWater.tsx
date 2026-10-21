@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Droplets, Layers } from 'lucide-react';
+import { Droplets, Layers, AlertTriangle, Sparkles, CheckCircle2 } from 'lucide-react';
 
 interface Step3Props {
   soilType: string;
@@ -9,6 +9,7 @@ interface Step3Props {
   setSoilPh: (ph: number) => void;
   irrigation: string;
   setIrrigation: (irr: string) => void;
+  autoSelectedSoil?: boolean;
 }
 
 export const Step3SoilWater: React.FC<Step3Props> = ({
@@ -17,13 +18,14 @@ export const Step3SoilWater: React.FC<Step3Props> = ({
   soilPh,
   setSoilPh,
   irrigation,
-  setIrrigation
+  setIrrigation,
+  autoSelectedSoil = true
 }) => {
   const { t } = useTranslation();
 
   const soils = [
-    { name: 'Red Sandy Loam', desc: 'Free draining, ideal for groundnut & millets', color: 'border-amber-400 bg-amber-50/50' },
-    { name: 'Black Clay (Vertisol)', desc: 'High moisture retention, ideal for cotton & jowar', color: 'border-stone-500 bg-stone-100/50' },
+    { name: 'Red Sandy Loam', desc: 'Free draining, ideal for groundnut, ragi & millets', color: 'border-amber-400 bg-amber-50/50' },
+    { name: 'Black Clay (Vertisol)', desc: 'High moisture retention, ideal for cotton, jowar & pigeonpea', color: 'border-stone-500 bg-stone-100/50' },
     { name: 'Alluvial Loam', desc: 'Fertile river basin silt, suitable for diverse cereals', color: 'border-emerald-400 bg-emerald-50/50' },
     { name: 'Medium Black Soil', desc: 'Balanced loam-clay transition zone', color: 'border-yellow-500 bg-yellow-50/50' }
   ];
@@ -46,10 +48,18 @@ export const Step3SoilWater: React.FC<Step3Props> = ({
 
       {/* Soil Type */}
       <div className="space-y-2">
-        <label className="block text-xs font-bold text-stone-700 uppercase tracking-wide flex items-center gap-1.5">
-          <Layers className="w-4 h-4 text-emerald-600" />
-          {t('step3.section1_title')}
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-bold text-stone-700 uppercase tracking-wide flex items-center gap-1.5">
+            <Layers className="w-4 h-4 text-emerald-600" />
+            {t('step3.section1_title')}
+          </label>
+          {autoSelectedSoil && (
+            <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+              {t('step3.auto_selected_note')}
+            </span>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {soils.map((s) => {
             const isSelected = soilType === s.name;
@@ -64,7 +74,10 @@ export const Step3SoilWater: React.FC<Step3Props> = ({
                     : 'border-stone-200 bg-white hover:border-stone-300'
                 }`}
               >
-                <div className="text-sm font-bold text-stone-900">{s.name}</div>
+                <div className="text-sm font-bold text-stone-900 flex items-center justify-between">
+                  <span>{s.name}</span>
+                  {isSelected && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                </div>
                 <div className="text-[11px] text-stone-500 mt-0.5">{s.desc}</div>
               </button>
             );
@@ -72,14 +85,14 @@ export const Step3SoilWater: React.FC<Step3Props> = ({
         </div>
       </div>
 
-      {/* Soil pH Slider with Agronomic Color Range */}
+      {/* Soil pH Slider with Agronomic Color Range and Plain Guidance */}
       <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold text-stone-700 uppercase tracking-wide">
             {t('step3.section2_title')}
           </label>
           <span className="text-sm font-extrabold px-3 py-0.5 bg-emerald-100 text-emerald-900 rounded-full border border-emerald-300">
-            pH {soilPh.toFixed(1)} ({soilPh < 6.0 ? t('step3.acidic') : soilPh > 7.5 ? t('step3.alkaline') : t('step3.neutral')})
+            pH {soilPh.toFixed(1)} ({soilPh < 6.0 ? t('step3.acidic') : soilPh > 7.6 ? t('step3.alkaline') : t('step3.neutral')})
           </span>
         </div>
 
@@ -98,6 +111,20 @@ export const Step3SoilWater: React.FC<Step3Props> = ({
           <span>6.8 ({t('step3.neutral')})</span>
           <span>8.5 ({t('step3.alkaline')})</span>
         </div>
+
+        {/* Severe pH Warnings with Plain Corrective Advice */}
+        {soilPh < 5.5 && (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <span>{t('step3.ph_warning_acidic')}</span>
+          </div>
+        )}
+        {soilPh > 8.2 && (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <span>{t('step3.ph_warning_alkaline')}</span>
+          </div>
+        )}
       </div>
 
       {/* Irrigation Source */}
@@ -120,7 +147,10 @@ export const Step3SoilWater: React.FC<Step3Props> = ({
                     : 'border-stone-200 bg-white hover:border-stone-300'
                 }`}
               >
-                <div className="text-sm font-bold text-stone-900">{ws.name}</div>
+                <div className="text-sm font-bold text-stone-900 flex items-center justify-between">
+                  <span>{ws.name}</span>
+                  {isSelected && <CheckCircle2 className="w-4 h-4 text-sky-600" />}
+                </div>
                 <div className="text-[11px] text-stone-500 mt-0.5">{ws.desc}</div>
               </button>
             );

@@ -37,12 +37,14 @@ export interface LandConstraints {
   length_m: number;
   breadth_m: number;
   shape: string;
+  shape_type?: string;
   orientation: string;
   irrigation: string;
   soil_type: string;
   soil_ph: number;
   season: string;
   budget_inr?: number;
+  photo_preview?: string;
 }
 
 export interface EvaluateRequest {

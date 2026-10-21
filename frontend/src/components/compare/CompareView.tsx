@@ -1,22 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import { Crop, ComparisonItem, EvaluateRequest } from '../../types';
+import { useTranslation } from 'react-i18next';
+import { Crop, ComparisonItem, EvaluateRequest, SavedPlan } from '../../types';
 import { compareConfigurations } from '../../services/api';
 import { EvidenceBadge } from '../evidence/EvidenceBadge';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Columns, Plus, Check, RefreshCw, Sparkles, TrendingUp } from 'lucide-react';
+import { Columns, Plus, Check, RefreshCw, Sparkles, TrendingUp, Bookmark } from 'lucide-react';
 
 interface CompareViewProps {
   crops: Crop[];
+  selectedPlansToCompare?: SavedPlan[] | null;
+  onClearCustomCompare?: () => void;
 }
 
-export const CompareView: React.FC<CompareViewProps> = ({ crops }) => {
+export const CompareView: React.FC<CompareViewProps> = ({
+  crops,
+  selectedPlansToCompare,
+  onClearCustomCompare
+}) => {
+  const { t } = useTranslation();
   const [items, setItems] = useState<ComparisonItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Pre-load default 4 intercrop configurations
+  // If custom saved plans are passed, convert them to ComparisonItems
   useEffect(() => {
-    loadDefaultComparison();
-  }, [crops]);
+    if (selectedPlansToCompare && selectedPlansToCompare.length > 0) {
+      loadSavedPlansComparison(selectedPlansToCompare);
+    } else {
+      loadDefaultComparison();
+    }
+  }, [selectedPlansToCompare, crops]);
+
+  const loadSavedPlansComparison = (plans: SavedPlan[]) => {
+    const convertedItems: ComparisonItem[] = plans.map((p, index) => {
+      const ev = p.plan_data.evaluation;
+      const res = p.plan_data.resources;
+      return {
+        config_index: index + 1,
+        title: p.title,
+        row_ratio: p.row_ratio,
+        evidence_level: p.evidence_level,
+        verdict: ev?.verdict || 'Recommended',
+        ler: ev?.ler || 1.0,
+        total_yield_kg: (ev?.yield_a_kg_per_acre || 0) + (ev?.yield_b_kg_per_acre || 0),
+        estimated_gross_income_inr: ev?.gross_income_inr || 0,
+        estimated_net_income_inr: ev?.net_income_inr || 0,
+        water_use_m3: ev?.water_use_m3 || 500,
+        labour_days: ev?.labour_person_days || 25,
+        risk_score: ev?.risk_score || 'Low',
+        evaluation: ev || ({} as any)
+      };
+    });
+    setItems(convertedItems);
+  };
 
   const loadDefaultComparison = async () => {
     if (crops.length < 4) return;
@@ -82,28 +117,42 @@ export const CompareView: React.FC<CompareViewProps> = ({ crops }) => {
     Water_100m3: Math.round(it.water_use_m3 / 100)
   }));
 
+  const isCustomPlans = selectedPlansToCompare && selectedPlansToCompare.length > 0;
+
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-black text-stone-900 flex items-center gap-2">
             <Columns className="w-6 h-6 text-emerald-600" />
-            Side-by-Side Intercrop Configuration Comparison
+            {isCustomPlans ? 'Comparing Your Selected Saved Plans' : 'Side-by-Side Intercrop Configuration Comparison'}
           </h2>
           <p className="text-xs text-stone-500">
             Compare Land Equivalent Ratio, net returns, water demand, and biological risk across up to 4 configurations.
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={loadDefaultComparison}
-          disabled={isLoading}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-xs"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-          <span>Refresh Benchmark Pairs</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {isCustomPlans && onClearCustomCompare && (
+            <button
+              type="button"
+              onClick={onClearCustomCompare}
+              className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold transition"
+            >
+              Reset to Benchmark Pairs
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={loadDefaultComparison}
+            disabled={isLoading}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-xs"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>Refresh Benchmark Pairs</span>
+          </button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -112,7 +161,7 @@ export const CompareView: React.FC<CompareViewProps> = ({ crops }) => {
         </div>
       ) : (
         <>
-          {/* Side by Side 4 Cards Grid */}
+          {/* Side by Side Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {items.map((it) => (
               <div
@@ -137,18 +186,20 @@ export const CompareView: React.FC<CompareViewProps> = ({ crops }) => {
                   <div className="pt-1">
                     <EvidenceBadge
                       level={it.evidence_level as any}
-                      confidenceInterval={it.evaluation.ler_ci}
+                      confidenceInterval={it.evaluation?.ler_ci}
                       size="sm"
                       showDetails={false}
                     />
                   </div>
                 </div>
 
-                {/* Key Metrics Stack */}
+                {/* Key Metrics Stack with Plain Explanations */}
                 <div className="space-y-2 pt-3 border-t border-stone-100 text-xs">
                   <div className="flex justify-between items-center">
-                    <span className="text-stone-500">Land Ratio (LER):</span>
-                    <span className="font-extrabold text-emerald-700 text-sm">{it.ler.toFixed(2)}</span>
+                    <span className="text-stone-500">Land Gain (LER):</span>
+                    <span className="font-extrabold text-emerald-700 text-sm">
+                      {it.ler.toFixed(2)} (+{Math.round((it.ler - 1.0) * 100)}%)
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-stone-500">Total Yield:</span>
@@ -196,7 +247,7 @@ export const CompareView: React.FC<CompareViewProps> = ({ crops }) => {
                     contentStyle={{ borderRadius: '12px', fontSize: '12px', border: '1px solid #e7e5e4' }}
                   />
                   <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                  <Bar dataKey="LER" fill="#15803d" name="Land Equivalent Ratio (LER)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="LER" fill="#15803d" name="Land Score (LER)" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="Income_kINR" fill="#d97706" name="Net Profit (Thousand ₹)" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="Yield_100kg" fill="#0284c7" name="Yield (x100 kg)" radius={[4, 4, 0, 0]} />
                 </BarChart>

@@ -1,24 +1,41 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { EvaluationResponse } from '../../types';
-import { HelpCircle, CheckCircle2, AlertTriangle, AlertCircle, FileText, Layers, ShieldCheck } from 'lucide-react';
-import { EvidenceBadge } from '../evidence/EvidenceBadge';
+import { HelpCircle, FileText, Layers, BookOpen, Sparkles, Scale } from 'lucide-react';
 
 interface ExplainabilityViewProps {
   evaluation: EvaluationResponse;
 }
 
 export const ExplainabilityView: React.FC<ExplainabilityViewProps> = ({ evaluation }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6">
       {/* Plain Language Summary */}
       <div className="p-5 rounded-2xl bg-emerald-50/80 border border-emerald-200 shadow-xs">
         <h4 className="text-sm font-bold text-emerald-950 flex items-center gap-2 mb-2">
           <HelpCircle className="w-4 h-4 text-emerald-700" />
-          Why This Result? Plain-Language Agronomic Explanation
+          Agronomic Explanation in Plain Language
         </h4>
         <p className="text-xs text-emerald-900 leading-relaxed font-medium">
           {evaluation.explainability_narrative}
         </p>
+      </div>
+
+      {/* LER Plain Math Card */}
+      <div className="p-5 rounded-2xl bg-white border border-stone-200 shadow-xs space-y-3">
+        <h4 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+          <Scale className="w-4 h-4 text-emerald-600" />
+          How Land Efficiency (LER) Is Calculated
+        </h4>
+        <p className="text-xs text-stone-600 leading-relaxed">
+          <b>LER = (Yield A in Mix ÷ Yield A Solo) + (Yield B in Mix ÷ Yield B Solo)</b>
+        </p>
+        <div className="p-3 bg-stone-50 rounded-xl border border-stone-100 text-xs text-stone-700 space-y-1">
+          <div>• <b>LER = 1.00</b>: Intercropping produces the exact same harvest as growing the two crops separately.</div>
+          <div>• <b>LER &gt; 1.00 (e.g. {evaluation.ler.toFixed(2)})</b>: Intercropping yields <b>+{Math.round((evaluation.ler - 1.0) * 100)}% more total produce</b> from the same 1 acre field due to canopy and root synergy.</div>
+        </div>
       </div>
 
       {/* Trial Citation Section (if OBSERVED) */}
@@ -44,11 +61,11 @@ export const ExplainabilityView: React.FC<ExplainabilityViewProps> = ({ evaluati
               <p className="font-bold text-stone-900 mt-0.5">{evaluation.citation.location}</p>
             </div>
             <div className="p-2.5 rounded-xl bg-stone-50 border border-stone-100">
-              <span className="text-stone-500 font-medium">Year & Season</span>
+              <span className="text-stone-500 font-medium">Year &amp; Season</span>
               <p className="font-bold text-stone-900 mt-0.5">{evaluation.citation.year} ({evaluation.citation.season})</p>
             </div>
             <div className="p-2.5 rounded-xl bg-stone-50 border border-stone-100">
-              <span className="text-stone-500 font-medium">Soil & Rainfall</span>
+              <span className="text-stone-500 font-medium">Soil &amp; Rainfall</span>
               <p className="font-bold text-stone-900 mt-0.5">{evaluation.citation.soil_type} ({evaluation.citation.rainfall_mm}mm)</p>
             </div>
           </div>
@@ -91,50 +108,6 @@ export const ExplainabilityView: React.FC<ExplainabilityViewProps> = ({ evaluati
           </div>
         </div>
       )}
-
-      {/* Safety Checks Diagnostics */}
-      <div className="p-5 rounded-2xl bg-white border border-stone-200 shadow-xs space-y-3">
-        <h4 className="text-sm font-bold text-stone-900 flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          Individual Agronomic Constraint Verifications
-        </h4>
-        <div className="space-y-2">
-          {evaluation.checks.map((chk, idx) => {
-            const isPass = chk.status === 'PASS';
-            const isWarn = chk.status === 'WARNING';
-            return (
-              <div
-                key={idx}
-                className={`p-3 rounded-xl border flex items-start gap-3 text-xs ${
-                  isPass
-                    ? 'bg-emerald-50/60 border-emerald-200 text-emerald-950'
-                    : isWarn
-                    ? 'bg-amber-50/60 border-amber-200 text-amber-950'
-                    : 'bg-rose-50/60 border-rose-200 text-rose-950'
-                }`}
-              >
-                {isPass ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                ) : isWarn ? (
-                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                ) : (
-                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                )}
-                <div>
-                  <div className="font-bold flex items-center gap-2">
-                    <span>{chk.parameter}</span>
-                    <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.2 rounded-md bg-white/70">
-                      {chk.status}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 font-medium">{chk.farmer_message}</p>
-                  <p className="text-[11px] opacity-75 mt-0.5 italic">{chk.scientific_detail}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 };

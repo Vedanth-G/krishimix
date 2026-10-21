@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sun, CloudRain, Snowflake, MapPin } from 'lucide-react';
+import { Sun, CloudRain, Snowflake, MapPin, CheckCircle2, AlertTriangle, Sparkles } from 'lucide-react';
+import { findLocationProfile, REGIONAL_LOCATION_PROFILES, LocationProfile } from '../../data/locationDatabase';
 
 interface Step1Props {
   season: string;
@@ -9,6 +10,8 @@ interface Step1Props {
   setLocation: (loc: string) => void;
   zone: string;
   setZone: (z: string) => void;
+  setSoilType?: (st: string) => void;
+  setSoilPh?: (ph: number) => void;
 }
 
 export const Step1LocationSeason: React.FC<Step1Props> = ({
@@ -17,9 +20,12 @@ export const Step1LocationSeason: React.FC<Step1Props> = ({
   location,
   setLocation,
   zone,
-  setZone
+  setZone,
+  setSoilType,
+  setSoilPh
 }) => {
   const { t } = useTranslation();
+  const [activeProfile, setActiveProfile] = useState<LocationProfile | null>(null);
 
   const seasons = [
     {
@@ -45,13 +51,25 @@ export const Step1LocationSeason: React.FC<Step1Props> = ({
     }
   ];
 
-  const popularLocations = [
-    { loc: 'Dharwad, Karnataka', z: 'Northern Transitional Zone' },
-    { loc: 'Raichur, Karnataka', z: 'North-Eastern Dry Zone' },
-    { loc: 'Bangalore Rural, Karnataka', z: 'Southern Dry Zone' },
-    { loc: 'Anantapur, Andhra Pradesh', z: 'Rainfed Red Sandy Loam Belt' },
-    { loc: 'Solapur, Maharashtra', z: 'Deccan Vertisols' }
-  ];
+  // Check location against verified profiles
+  useEffect(() => {
+    const profile = findLocationProfile(location);
+    setActiveProfile(profile);
+    if (profile) {
+      setZone(profile.zone);
+      if (setSoilType) setSoilType(profile.typicalSoil);
+      if (setSoilPh) setSoilPh(profile.typicalPh);
+    }
+  }, [location]);
+
+  const handleSelectQuickLocation = (profile: LocationProfile) => {
+    const locString = `${profile.district}, ${profile.state}`;
+    setLocation(locString);
+    setZone(profile.zone);
+    if (setSoilType) setSoilType(profile.typicalSoil);
+    if (setSoilPh) setSoilPh(profile.typicalPh);
+    setActiveProfile(profile);
+  };
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
@@ -93,7 +111,7 @@ export const Step1LocationSeason: React.FC<Step1Props> = ({
         </div>
       </div>
 
-      {/* Location Input with Quick Suggestion Chips */}
+      {/* Location Input with Verification Feedback */}
       <div className="space-y-3 bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
         <label className="block text-xs font-bold text-stone-700 uppercase tracking-wide">
           {t('step1.section2_title')}
@@ -109,22 +127,52 @@ export const Step1LocationSeason: React.FC<Step1Props> = ({
           />
         </div>
 
+        {/* Verification Status Banner */}
+        {activeProfile ? (
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs space-y-1.5 animate-fadeIn">
+            <div className="flex items-center gap-1.5 font-bold text-emerald-900">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{t('step1.verified_profile')}: {activeProfile.district} ({activeProfile.zone})</span>
+            </div>
+            <p className="text-[11px] text-emerald-800">
+              {t('step1.auto_detected')} <b>{activeProfile.typicalSoil}</b> • <b>pH {activeProfile.typicalPh}</b> • <b>{activeProfile.avgRainfallMm} mm</b> avg rainfall.
+            </p>
+            <div className="pt-1 flex flex-wrap items-center gap-1">
+              <span className="text-[10px] text-emerald-700 font-semibold">{t('step1.suitable_crops_tip')}</span>
+              {activeProfile.suitableCrops.map((c, i) => (
+                <span key={i} className="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-200/70 text-emerald-900 rounded">
+                  {c}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : location.trim().length >= 2 ? (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs space-y-1 text-amber-900">
+            <div className="flex items-center gap-1.5 font-bold">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>{t('step1.unverified_warning')}</span>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Quick Suggestion Chips */}
         <div className="pt-2">
           <span className="text-[11px] font-semibold text-stone-500 block mb-1.5">
             {t('step1.quick_select')}
           </span>
           <div className="flex flex-wrap gap-1.5">
-            {popularLocations.map((p, idx) => (
+            {REGIONAL_LOCATION_PROFILES.slice(0, 7).map((p, idx) => (
               <button
                 key={idx}
                 type="button"
-                onClick={() => {
-                  setLocation(p.loc);
-                  setZone(p.z);
-                }}
-                className="text-xs px-2.5 py-1 bg-stone-100 hover:bg-emerald-100 text-stone-700 hover:text-emerald-800 rounded-lg transition font-medium"
+                onClick={() => handleSelectQuickLocation(p)}
+                className={`text-xs px-2.5 py-1 rounded-lg transition font-medium ${
+                  activeProfile?.district === p.district
+                    ? 'bg-emerald-700 text-white font-bold shadow-xs'
+                    : 'bg-stone-100 hover:bg-emerald-100 text-stone-700 hover:text-emerald-800'
+                }`}
               >
-                {p.loc}
+                {p.district}, {p.state}
               </button>
             ))}
           </div>

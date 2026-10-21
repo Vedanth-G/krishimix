@@ -10,6 +10,8 @@
     "compare": "Compare",
     "saved": "Saved Plans",
     "admin": "Admin / Trials",
+    "listen_page": "Listen Page",
+    "stop_audio": "Stop Audio",
     "read_aloud": "Read Aloud",
     "stop_reading": "Stop Audio",
     "voice_input": "Voice Search"
@@ -20,6 +22,32 @@
     "soil_water": "Soil/Water",
     "crops": "Crops",
     "results": "Results"
+  },
+  "speech": {
+    "step1": "Step 1: Choose your agricultural season and enter your district. KrishiMix will automatically detect your regional soil type and rainfall zone.",
+    "step2": "Step 2: Enter your land area in acres or physical field dimensions in meters. You can also select field shapes or upload a boundary photo.",
+    "step3": "Step 3: Verify soil type, soil pH level, and irrigation source. Extreme pH levels will show corrective advice.",
+    "step4": "Step 4: Select your primary cereal crop and companion pulse variety. Make sure to pick complementary crops, not the same crop.",
+    "step5": "Step 5: Review your scientific intercropping verdict, Land Equivalent Ratio, scale planting layout, input cost estimate, and honest biological risk levels.",
+    "compare": "Compare Screen: Review up to 4 intercropping configurations side by side to compare land efficiency, harvest yield, and estimated profits.",
+    "saved": "Saved Plans: Access your farm plans saved on this device. You can view, compare selected plans, or print summaries.",
+    "admin": "Admin Panel: Upload research station trial CSVs, inspect dataset integrity, and retrain machine learning models."
+  },
+  "disclaimer": {
+    "title": "Realistic Agronomic & Economic Disclaimer",
+    "text": "Profits and yields shown are research trial benchmarks under scientific management. Actual farm returns are NOT guaranteed and vary widely with rainfall timing, pest outbreaks, weed control, local input costs, and mandi auction market prices."
+  },
+  "risks": {
+    "title": "Real-World Risk Assessment (Un-Sugarcoated)",
+    "subtitle": "Direct biological and financial vulnerabilities under actual farming conditions:",
+    "drought_title": "Moisture & Dry Spell Risk",
+    "drought_desc": "If monsoon pauses for more than 10-14 days during flowering, rainfed yields can decline by 25-40%. Both crops compete for the same moisture pool.",
+    "pest_title": "Pest & Disease Cross-Transfer Risk",
+    "pest_desc": "Host insects like pod borer (Helicoverpa) and sucking aphids can migrate between adjacent crop rows. Regular scouting is essential.",
+    "shading_title": "Canopy Shading & Stunting Risk",
+    "shading_desc": "If the main cereal grows significantly faster or the companion is sown late, the lower pulse canopy can suffer up to 30% sunlight starvation.",
+    "market_title": "Market Price Volatility Risk",
+    "market_desc": "Local mandi prices often dip during peak post-harvest arrivals. Maximum net profit requires access to MSP procurement or temporary crop storage."
   },
   "step1": {
     "title": "Select Season & Location",
@@ -33,16 +61,24 @@
     "summer_sub": "March – May",
     "section2_title": "2. Farm Location & District",
     "location_placeholder": "e.g. Dharwad, Karnataka",
-    "quick_select": "Quick Select Common Research Station Regions:"
+    "quick_select": "Quick Select Verified Regional Research Profiles:",
+    "verified_profile": "Verified Regional Profile",
+    "auto_detected": "Auto-detected soil & zone:",
+    "unverified_warning": "Unverified Location: Please select or verify a supported district so soil, pH, and rainfall parameters match research station trials.",
+    "suitable_crops_tip": "Recommended crops in this agro-zone:"
   },
   "step2": {
     "title": "Land Size & Dimensions",
-    "desc": "Precision row calculations depend on field boundary meters.",
+    "desc": "Precision row calculations depend on field boundary meters and boundary shape.",
     "section1_title": "1. Total Land Area (Acres)",
-    "custom_or": "Or custom:",
+    "custom_or": "Or custom acres:",
     "acres_unit": "acres",
     "section2_title": "2. Physical Field Dimensions (Meters)",
     "section2_sub": "Rows run along length",
+    "auto_sync_on": "Auto-sync Breadth from Length (Active)",
+    "auto_sync_off": "Manual Dimension Entry",
+    "dim_match": "Dimensions match area ({{len}}m × {{brd}}m = {{sqm}} m² ≈ {{acres}} acres)",
+    "dim_mismatch": "Adjusted dimensions: {{sqm}} m² equals {{calcAcres}} acres",
     "field_length": "Field Length (m)",
     "field_length_sub": "Parallel to planting furrow lines",
     "field_breadth": "Field Breadth (m)",
@@ -51,17 +87,28 @@
     "north_south_title": "North - South (Recommended)",
     "north_south_desc": "Both sides receive uniform morning and evening sunlight",
     "east_west_title": "East - West",
-    "east_west_desc": "Used when field contour slope requires cross-slope furrowing"
+    "east_west_desc": "Used when field contour slope requires cross-slope furrowing",
+    "section4_title": "4. Field Shape & Boundary Photo",
+    "shape_regular": "Regular (Rectangle / Square)",
+    "shape_trapezoid": "Trapezoid / Tapered Wedge",
+    "shape_contour": "Contour / Irregular Curve",
+    "shape_custom": "Upload Boundary Sketch / Photo",
+    "upload_btn": "Upload Field Photo or Patta Sketch",
+    "upload_hint": "Take a photo of your field or upload survey sketch (PNG, JPG)",
+    "photo_attached": "Field boundary photo attached. Layout will contour to edges."
   },
   "step3": {
     "title": "Soil Condition & Irrigation",
     "desc": "Incompatible root moisture and pH will automatically trigger agronomic safety warnings.",
     "section1_title": "1. Field Soil Type",
+    "auto_selected_note": "Auto-selected based on regional profile",
     "section2_title": "2. Soil pH (Acidity / Alkalinity)",
     "section3_title": "3. Available Irrigation Supply",
     "acidic": "Acidic",
     "neutral": "Neutral & Ideal",
-    "alkaline": "Alkaline"
+    "alkaline": "Alkaline",
+    "ph_warning_acidic": "⚠️ Severe Acidity (pH < 5.5): High aluminium toxicity risk. Apply agricultural lime (200-400 kg/acre) before sowing.",
+    "ph_warning_alkaline": "⚠️ Severe Alkalinity (pH > 8.2): Zinc and iron deficiency likely. Apply gypsum and zinc sulphate."
   },
   "step4": {
     "title": "Choose Crops & Varieties",
@@ -73,7 +120,13 @@
     "suggesting": "Analyzing Trials...",
     "section2_title": "2. Select Companion Crop (Row B)",
     "section2_badge": "Pulse / Synergistic Intercrop",
-    "section3_title": "3. Select Planting Row Proportion (Row Ratio)"
+    "section3_title": "3. Select Planting Row Proportion (Row Ratio)",
+    "same_crop_error": "❌ Incompatible Pairing: Crop A and Crop B cannot be the identical crop. Intercropping requires two different complementary species (e.g. Cereal + Pulse).",
+    "simple_terms": {
+      "sunlight": "Sunlight Sharing",
+      "maturity": "Maturity Duration",
+      "fertilizer": "Natural Soil Nitrogen from Pulses"
+    }
   },
   "wizard": {
     "step": "Step {{current}} of {{total}}",
@@ -90,7 +143,8 @@
     "next": "Continue",
     "back": "Back",
     "evaluate_now": "Evaluate Intercropping Plan",
-    "evaluating": "Evaluating Agronomy..."
+    "evaluating": "Evaluating Agronomy...",
+    "compare_this_plan": "Compare With Other Options"
   },
   "evidence": {
     "observed": "OBSERVED",
@@ -105,24 +159,33 @@
   "results": {
     "verdict_title": "Agronomic Verdict",
     "ler_metric": "Land Equivalent Ratio (LER)",
-    "ler_meaning": "Land use efficiency compared to monoculture",
+    "ler_meaning": "Land efficiency score: 1.34 means +34% extra harvest from the same field vs single cropping.",
     "gross_return": "Estimated Gross Revenue",
     "net_return": "Estimated Net Profit",
     "water_need": "Estimated Irrigation Need",
     "labour_days": "Operational Labour",
     "risk_level": "Biological Risk",
-    "tab_layout": "Planting Layout",
-    "tab_resources": "Input & Seed Costs",
-    "tab_checks": "Agronomic Checks",
-    "tab_explain": "Why This Result?",
+    "tab_layout": "Planting Layout (To-Scale SVG)",
+    "tab_resources": "Resource Estimator & Costs",
+    "tab_checks": "Agronomic Safety Checks",
+    "tab_explain": "AI Evidence & Citations",
     "export_pdf": "Export PDF Summary",
     "export_png": "Save Layout Image",
-    "save_plan": "Save Farm Plan"
+    "save_plan": "Save Farm Plan",
+    "compare_btn": "Compare This Plan"
   },
   "unsupported": {
     "heading": "This Combination Cannot Be Recommended",
     "reasons_title": "Identified Agronomic Conflicts",
     "alternatives_title": "Recommended Supported Alternatives",
     "switch_btn": "Switch to This Alternative"
+  },
+  "saved_plans": {
+    "title": "Saved Farm Planting Plans",
+    "desc": "Revisit your custom layouts, seed requirements, and economic returns offline.",
+    "compare_selected": "Compare Selected Plans ({{count}})",
+    "select_to_compare": "Select 2 to 4 plans to compare side-by-side",
+    "empty_title": "No saved plans yet",
+    "empty_desc": "Create an evaluation in the Farm Planner and click 'Save Farm Plan' to store it here."
   }
 }
