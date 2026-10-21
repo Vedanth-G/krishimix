@@ -10,7 +10,7 @@ import {
   SavedPlan
 } from '../types';
 
-const API_BASE = '/api/v1';
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '') : '') + '/api/v1';
 
 export async function fetchCrops(): Promise<Crop[]> {
   const res = await fetch(`${API_BASE}/crops`);
