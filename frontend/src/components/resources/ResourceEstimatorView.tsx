@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ResourceEstimationResponse, ResourceAssumptions } from '../../types';
 import { DollarSign, Droplets, Users, Sprout, Settings, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { estimateResources } from '../../services/api';
@@ -26,6 +27,7 @@ export const ResourceEstimatorView: React.FC<ResourceEstimatorViewProps> = ({
   yieldAKg,
   yieldBKg
 }) => {
+  const { t } = useTranslation();
   const [data, setData] = useState<ResourceEstimationResponse>(initialResources);
   const [assumptions, setAssumptions] = useState<ResourceAssumptions>(initialResources.assumptions);
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -61,7 +63,7 @@ export const ResourceEstimatorView: React.FC<ResourceEstimatorViewProps> = ({
         {/* Seeds */}
         <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs">
           <div className="flex items-center gap-2 text-stone-500 text-xs font-semibold mb-1">
-            <Sprout className="w-4 h-4 text-emerald-600" /> Total Seeds Needed
+            <Sprout className="w-4 h-4 text-emerald-600" /> {t('resources.seeds_needed')}
           </div>
           <div className="text-xl font-bold text-stone-900">
             {(data.seed_crop_a_kg + data.seed_crop_b_kg).toFixed(1)} <span className="text-xs font-medium text-stone-500">kg</span>
@@ -74,7 +76,7 @@ export const ResourceEstimatorView: React.FC<ResourceEstimatorViewProps> = ({
         {/* Fertilizer */}
         <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs">
           <div className="flex items-center gap-2 text-stone-500 text-xs font-semibold mb-1">
-            <DollarSign className="w-4 h-4 text-amber-600" /> Fertilizer (N:P:K)
+            <DollarSign className="w-4 h-4 text-amber-600" /> {t('resources.fertilizer_title')}
           </div>
           <div className="text-xl font-bold text-stone-900">
             {(data.fertilizer_n_kg + data.fertilizer_p_kg + data.fertilizer_k_kg).toFixed(0)} <span className="text-xs font-medium text-stone-500">kg</span>
@@ -87,7 +89,7 @@ export const ResourceEstimatorView: React.FC<ResourceEstimatorViewProps> = ({
         {/* Irrigation Water */}
         <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs">
           <div className="flex items-center gap-2 text-stone-500 text-xs font-semibold mb-1">
-            <Droplets className="w-4 h-4 text-sky-600" /> Water Requirement
+            <Droplets className="w-4 h-4 text-sky-600" /> {t('resources.water_needed')}
           </div>
           <div className="text-xl font-bold text-stone-900">
             {data.water_total_m3.toLocaleString()} <span className="text-xs font-medium text-stone-500">m³</span>
@@ -100,7 +102,7 @@ export const ResourceEstimatorView: React.FC<ResourceEstimatorViewProps> = ({
         {/* Labour Days */}
         <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs">
           <div className="flex items-center gap-2 text-stone-500 text-xs font-semibold mb-1">
-            <Users className="w-4 h-4 text-indigo-600" /> Total Farm Labour
+            <Users className="w-4 h-4 text-indigo-600" /> {t('resources.labour_days')}
           </div>
           <div className="text-xl font-bold text-stone-900">
             {data.labour_total_days.toFixed(1)} <span className="text-xs font-medium text-stone-500">days</span>
@@ -114,12 +116,12 @@ export const ResourceEstimatorView: React.FC<ResourceEstimatorViewProps> = ({
       {/* Financial Summary Banner */}
       <div className="bg-gradient-to-r from-emerald-800 to-emerald-950 text-white rounded-2xl p-6 shadow-md flex flex-wrap items-center justify-between gap-6">
         <div>
-          <span className="text-xs uppercase tracking-wider text-emerald-300 font-bold">Estimated Net Return</span>
+          <span className="text-xs uppercase tracking-wider text-emerald-300 font-bold">{t('resources.net_income')}</span>
           <div className="text-3xl font-extrabold text-white mt-1">
             ₹{data.net_profit_inr.toLocaleString()}
           </div>
           <p className="text-xs text-emerald-200 mt-1">
-            Gross Revenue ₹{data.gross_revenue_inr.toLocaleString()} − Total Input Costs ₹{data.total_input_cost_inr.toLocaleString()}
+            {t('resources.gross_revenue')} ₹{data.gross_revenue_inr.toLocaleString()} − {t('resources.total_input_cost')} ₹{data.total_input_cost_inr.toLocaleString()}
           </p>
         </div>
 
@@ -134,25 +136,25 @@ export const ResourceEstimatorView: React.FC<ResourceEstimatorViewProps> = ({
             className="flex items-center gap-1.5 px-4 py-2.5 bg-white text-emerald-900 font-bold text-xs rounded-xl shadow-sm hover:bg-emerald-50 transition"
           >
             <Settings className="w-4 h-4 text-emerald-700" />
-            <span>{isEditing ? 'Close Assumptions' : 'Customize Costs'}</span>
+            <span>{isEditing ? t('resources.cancel') : t('resources.edit_assumptions')}</span>
           </button>
         </div>
       </div>
 
-      {/* Editable Assumptions Drawer / Modal */}
+      {/* Editable Assumptions Drawer */}
       {isEditing && (
         <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-5 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-bold text-amber-950 flex items-center gap-2">
               <Settings className="w-4 h-4 text-amber-700" />
-              Customize Unit Costs & Input Rates
+              {t('resources.assumptions_title')}
             </h4>
             <span className="text-xs text-amber-800">Changes apply immediately to this field plan</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
             <div>
-              <label className="block text-stone-700 font-semibold mb-1">Labour Rate (₹/day)</label>
+              <label className="block text-stone-700 font-semibold mb-1">{t('resources.labour_wage_day')} (₹)</label>
               <input
                 type="number"
                 value={assumptions.labour_rate_inr_per_day}
@@ -160,8 +162,9 @@ export const ResourceEstimatorView: React.FC<ResourceEstimatorViewProps> = ({
                 className="w-full px-3 py-2 bg-white rounded-lg border border-stone-300 font-bold"
               />
             </div>
+
             <div>
-              <label className="block text-stone-700 font-semibold mb-1">Fertilizer Rate (₹/kg)</label>
+              <label className="block text-stone-700 font-semibold mb-1">{t('resources.fertilizer_per_kg')} (₹)</label>
               <input
                 type="number"
                 value={assumptions.fertilizer_cost_inr_per_kg}
@@ -169,66 +172,76 @@ export const ResourceEstimatorView: React.FC<ResourceEstimatorViewProps> = ({
                 className="w-full px-3 py-2 bg-white rounded-lg border border-stone-300 font-bold"
               />
             </div>
-            <div>
-              <label className="block text-stone-700 font-semibold mb-1">Crop A Seed (₹/kg)</label>
-              <input
-                type="number"
-                value={assumptions.seed_cost_a_inr_per_kg}
-                onChange={(e) => setAssumptions({ ...assumptions, seed_cost_a_inr_per_kg: parseFloat(e.target.value) || 0 })}
-                className="w-full px-3 py-2 bg-white rounded-lg border border-stone-300 font-bold"
-              />
-            </div>
-            <div>
-              <label className="block text-stone-700 font-semibold mb-1">Crop B Seed (₹/kg)</label>
-              <input
-                type="number"
-                value={assumptions.seed_cost_b_inr_per_kg}
-                onChange={(e) => setAssumptions({ ...assumptions, seed_cost_b_inr_per_kg: parseFloat(e.target.value) || 0 })}
-                className="w-full px-3 py-2 bg-white rounded-lg border border-stone-300 font-bold"
-              />
-            </div>
-          </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              disabled={isUpdating}
-              onClick={handleRecalculate}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-xs transition"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isUpdating ? 'animate-spin' : ''}`} />
-              <span>Update Calculations</span>
-            </button>
+            <div>
+              <label className="block text-stone-700 font-semibold mb-1">Water Cost (₹/m³)</label>
+              <input
+                type="number"
+                value={assumptions.water_cost_inr_per_m3}
+                onChange={(e) => setAssumptions({ ...assumptions, water_cost_inr_per_m3: parseFloat(e.target.value) || 0 })}
+                className="w-full px-3 py-2 bg-white rounded-lg border border-stone-300 font-bold"
+              />
+            </div>
+
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={handleRecalculate}
+                disabled={isUpdating}
+                className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-bold text-xs shadow-xs transition flex items-center justify-center gap-1.5"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isUpdating ? 'animate-spin' : ''}`} />
+                <span>{t('resources.save_recalculate')}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Detailed Itemized Breakdown */}
+      {/* Itemized Cost Breakdown Table */}
       <div className="bg-white rounded-2xl p-5 border border-stone-200 shadow-xs">
-        <h4 className="text-sm font-bold text-stone-900 mb-3">Itemized Agricultural Expenditure</h4>
+        <h4 className="text-sm font-bold text-stone-900 mb-3">{t('resources.cost_breakdown')}</h4>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full text-xs text-left">
             <thead>
-              <tr className="border-b border-stone-200 text-stone-500 font-semibold bg-stone-50">
-                <th className="py-2.5 px-3">Category</th>
-                <th className="py-2.5 px-3">Item Name</th>
-                <th className="py-2.5 px-3">Quantity</th>
-                <th className="py-2.5 px-3">Unit Cost</th>
-                <th className="py-2.5 px-3">Total Cost</th>
-                <th className="py-2.5 px-3">Agronomic Notes</th>
+              <tr className="border-b border-stone-200 text-stone-500 font-semibold bg-stone-50/50">
+                <th className="py-2.5 px-3">Expense Category</th>
+                <th className="py-2.5 px-3">Input Quantity</th>
+                <th className="py-2.5 px-3">Subtotal (₹)</th>
+                <th className="py-2.5 px-3">Share of Total Cost</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100 text-stone-700">
-              {data.breakdown.map((item, idx) => (
-                <tr key={idx} className="hover:bg-stone-50/70 transition">
-                  <td className="py-3 px-3 font-semibold text-emerald-800">{item.category}</td>
-                  <td className="py-3 px-3 font-bold text-stone-900">{item.item_name}</td>
-                  <td className="py-3 px-3">{item.quantity} {item.unit}</td>
-                  <td className="py-3 px-3">₹{item.unit_cost_inr.toLocaleString()}</td>
-                  <td className="py-3 px-3 font-bold text-stone-900">₹{item.total_cost_inr.toLocaleString()}</td>
-                  <td className="py-3 px-3 text-stone-500 italic">{item.notes}</td>
-                </tr>
-              ))}
+              <tr>
+                <td className="py-3 px-3 font-semibold">{t('resources.seed_cost')}</td>
+                <td className="py-3 px-3">{(data.seed_crop_a_kg + data.seed_crop_b_kg).toFixed(1)} kg</td>
+                <td className="py-3 px-3 font-bold text-stone-900">₹{data.seed_cost_total_inr.toLocaleString()}</td>
+                <td className="py-3 px-3">{((data.seed_cost_total_inr / data.total_input_cost_inr) * 100).toFixed(1)}%</td>
+              </tr>
+              <tr>
+                <td className="py-3 px-3 font-semibold">{t('resources.fertilizer_cost')}</td>
+                <td className="py-3 px-3">{(data.fertilizer_n_kg + data.fertilizer_p_kg + data.fertilizer_k_kg).toFixed(0)} kg</td>
+                <td className="py-3 px-3 font-bold text-stone-900">₹{data.fertilizer_cost_total_inr.toLocaleString()}</td>
+                <td className="py-3 px-3">{((data.fertilizer_cost_total_inr / data.total_input_cost_inr) * 100).toFixed(1)}%</td>
+              </tr>
+              <tr>
+                <td className="py-3 px-3 font-semibold">{t('resources.irrigation_cost')}</td>
+                <td className="py-3 px-3">{data.water_total_m3.toLocaleString()} m³</td>
+                <td className="py-3 px-3 font-bold text-stone-900">₹{data.water_cost_total_inr.toLocaleString()}</td>
+                <td className="py-3 px-3">{((data.water_cost_total_inr / data.total_input_cost_inr) * 100).toFixed(1)}%</td>
+              </tr>
+              <tr>
+                <td className="py-3 px-3 font-semibold">{t('resources.labour_cost')}</td>
+                <td className="py-3 px-3">{data.labour_total_days.toFixed(1)} days</td>
+                <td className="py-3 px-3 font-bold text-stone-900">₹{data.labour_cost_total_inr.toLocaleString()}</td>
+                <td className="py-3 px-3">{((data.labour_cost_total_inr / data.total_input_cost_inr) * 100).toFixed(1)}%</td>
+              </tr>
+              <tr className="bg-stone-50 font-black text-stone-900">
+                <td className="py-3 px-3">{t('resources.total_input_cost')}</td>
+                <td className="py-3 px-3">—</td>
+                <td className="py-3 px-3 text-emerald-800">₹{data.total_input_cost_inr.toLocaleString()}</td>
+                <td className="py-3 px-3">100.0%</td>
+              </tr>
             </tbody>
           </table>
         </div>

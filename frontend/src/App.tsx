@@ -86,6 +86,7 @@ export const App: React.FC = () => {
 
   // Custom Compare Plans State
   const [selectedPlansToCompare, setSelectedPlansToCompare] = useState<SavedPlan[] | null>(null);
+  const [currentPlanToCompare, setCurrentPlanToCompare] = useState<SavedPlan | null>(null);
 
   // Audio Speech state
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
@@ -293,6 +294,48 @@ export const App: React.FC = () => {
   // Compare multiple saved plans
   const handleCompareSavedPlans = (plans: SavedPlan[]) => {
     setSelectedPlansToCompare(plans);
+    setCurrentPlanToCompare(null);
+    setNavTab('compare');
+  };
+
+  // Compare newly evaluated plan with benchmarks
+  const handleGoToCompareWithCurrent = () => {
+    if (evaluation) {
+      const cropAName = crops.find(c => c.id === cropAId)?.name || 'Crop A';
+      const cropBName = crops.find(c => c.id === cropBId)?.name || 'Crop B';
+      const planObj: SavedPlan = {
+        id: 9999,
+        title: `${cropAName} + ${cropBName} (${rowRatio})`,
+        farmer_name: 'Farmer',
+        land_area_acres: areaAcres,
+        crop_a_id: cropAId,
+        variety_a_id: varietyAId,
+        crop_b_id: cropBId,
+        variety_b_id: varietyBId,
+        row_ratio: rowRatio,
+        evidence_level: evaluation.evidence_level,
+        created_at: new Date().toISOString(),
+        plan_data: {
+          evaluation,
+          layout: layout || undefined,
+          resources: resources || undefined,
+          land: {
+            area_acres: areaAcres,
+            length_m: lengthM,
+            breadth_m: breadthM,
+            orientation,
+            shape: shapeType,
+            shape_type: shapeType,
+            soil_type: soilType,
+            soil_ph: soilPh,
+            irrigation,
+            season
+          }
+        }
+      };
+      setCurrentPlanToCompare(planObj);
+      setSelectedPlansToCompare(null);
+    }
     setNavTab('compare');
   };
 
@@ -446,7 +489,11 @@ export const App: React.FC = () => {
           <CompareView
             crops={crops}
             selectedPlansToCompare={selectedPlansToCompare}
-            onClearCustomCompare={() => setSelectedPlansToCompare(null)}
+            currentPlanToCompare={currentPlanToCompare}
+            onClearCustomCompare={() => {
+              setSelectedPlansToCompare(null);
+              setCurrentPlanToCompare(null);
+            }}
           />
         )}
         {navTab === 'saved' && (
@@ -588,7 +635,9 @@ export const App: React.FC = () => {
                   cropBId={cropBId}
                   varietyBId={varietyBId}
                   rowRatio={rowRatio}
-                  onGoToCompare={() => setNavTab('compare')}
+                  shapeType={shapeType}
+                  photoPreview={photoPreview}
+                  onGoToCompare={handleGoToCompareWithCurrent}
                 />
               )}
             </div>

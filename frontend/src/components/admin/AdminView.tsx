@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TrialRecord } from '../../types';
 import { fetchAdminTrials, uploadTrialsCsv, retrainModel, fetchModelMetrics } from '../../services/api';
 import { Upload, RefreshCw, CheckCircle2, AlertTriangle, Database, Cpu, Layers } from 'lucide-react';
 
 export const AdminView: React.FC = () => {
+  const { t } = useTranslation();
   const [trials, setTrials] = useState<TrialRecord[]>([]);
   const [metrics, setMetrics] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -59,10 +61,10 @@ export const AdminView: React.FC = () => {
         <div>
           <h2 className="text-xl font-black text-stone-900 flex items-center gap-2">
             <Database className="w-6 h-6 text-emerald-600" />
-            Agronomic Trial Data &amp; ML Model Governance
+            {t('admin.title')}
           </h2>
           <p className="text-xs text-stone-500">
-            Audit empirical research trials, upload verified university CSV datasets, and inspect ML regressor metrics.
+            {t('admin.subtitle')}
           </p>
         </div>
 
@@ -73,7 +75,7 @@ export const AdminView: React.FC = () => {
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-xs"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isRetraining ? 'animate-spin' : ''}`} />
-          <span>{isRetraining ? 'Retraining Regressor...' : 'Retrain ML Model'}</span>
+          <span>{isRetraining ? t('admin.retraining') : t('admin.retrain_btn')}</span>
         </button>
       </div>
 
@@ -82,7 +84,7 @@ export const AdminView: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
             <div className="flex items-center gap-2 text-stone-500 text-xs font-semibold mb-1">
-              <Cpu className="w-4 h-4 text-emerald-600" /> Model Architecture
+              <Cpu className="w-4 h-4 text-emerald-600" /> {t('admin.model_architecture')}
             </div>
             <div className="text-sm font-bold text-stone-900 truncate" title={metrics.model_type}>
               Random Forest Regressor
@@ -94,122 +96,141 @@ export const AdminView: React.FC = () => {
 
           <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
             <div className="flex items-center gap-2 text-stone-500 text-xs font-semibold mb-1">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> R² Goodness-of-Fit
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> {t('admin.r2_score')}
             </div>
             <div className="text-2xl font-black text-emerald-700">
               {metrics.r2_score}
             </div>
-            <div className="text-[11px] text-stone-500 mt-1">Cross-validated coefficient</div>
+            <div className="text-[11px] text-stone-500 mt-1">
+              Prediction accuracy across trials
+            </div>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
             <div className="flex items-center gap-2 text-stone-500 text-xs font-semibold mb-1">
-              <Layers className="w-4 h-4 text-sky-600" /> Mean Absolute Error
+              <Layers className="w-4 h-4 text-sky-600" /> {t('admin.mae_score')}
             </div>
-            <div className="text-2xl font-black text-sky-700">
-              ±{metrics.mae} LER
+            <div className="text-2xl font-black text-stone-900">
+              {metrics.mae}
             </div>
-            <div className="text-[11px] text-stone-500 mt-1">Average deviation on test fold</div>
+            <div className="text-[11px] text-stone-500 mt-1">
+              Mean absolute deviation
+            </div>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
             <div className="flex items-center gap-2 text-stone-500 text-xs font-semibold mb-1">
-              <Database className="w-4 h-4 text-amber-600" /> Trial Ingestion Count
+              <Database className="w-4 h-4 text-amber-600" /> {t('admin.total_trials')}
             </div>
-            <div className="text-2xl font-black text-amber-800">
-              {metrics.training_samples || trials.length} <span className="text-xs font-normal text-stone-500">records</span>
+            <div className="text-2xl font-black text-amber-700">
+              {metrics.total_training_samples}
             </div>
-            <div className="text-[11px] text-stone-500 mt-1">Verified trial observations</div>
+            <div className="text-[11px] text-stone-500 mt-1">
+              University station trials
+            </div>
           </div>
         </div>
       )}
 
-      {/* CSV Ingestion Portal */}
+      {/* Upload CSV Section */}
       <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-xs space-y-4">
         <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2">
           <Upload className="w-4 h-4 text-emerald-600" />
-          Ingest Institutional Field Trial CSV
+          {t('admin.upload_title')}
         </h3>
         <p className="text-xs text-stone-500">
-          Upload verified multi-year trial results from ICAR, State Agricultural Universities, or KVKs. Must include yields, solo baselines, and citation sources.
+          {t('admin.upload_hint')}
         </p>
 
-        <div className="p-6 border-2 border-dashed border-stone-300 rounded-2xl bg-stone-50 text-center space-y-2 hover:border-emerald-500 transition">
-          <input
-            type="file"
-            accept=".csv"
-            onChange={handleFileUpload}
-            id="csv-upload"
-            className="hidden"
-          />
-          <label htmlFor="csv-upload" className="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-stone-300 rounded-xl font-bold text-xs text-stone-800 shadow-xs hover:bg-stone-50">
-            <Upload className="w-4 h-4 text-emerald-700" />
-            <span>Choose Research CSV File</span>
-          </label>
-          <div className="text-[11px] text-stone-400">
-            Required headers: crop_a_name, variety_a_name, crop_b_name, variety_b_name, row_ratio, yield_a_kg_ha, solo_yield_a_kg_ha, source, year, location
+        <div className="p-6 border-2 border-dashed border-stone-300 rounded-xl bg-stone-50 text-center space-y-3">
+          <Upload className="w-8 h-8 text-stone-400 mx-auto" />
+          <div>
+            <label className="cursor-pointer">
+              <span className="text-xs font-bold text-emerald-700 hover:text-emerald-800 underline">
+                Select CSV file from computer
+              </span>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </label>
+            <p className="text-[11px] text-stone-400 mt-1">
+              Required headers: crop_a, variety_a, crop_b, variety_b, row_ratio, yield_a, yield_b, institution, year, location
+            </p>
           </div>
         </div>
 
-        {/* Upload feedback */}
         {uploadResult && (
-          <div className="p-4 rounded-xl bg-stone-50 border border-stone-200 text-xs space-y-2">
-            <div className="font-bold text-emerald-800">{uploadResult.status}</div>
-            {uploadResult.errors && uploadResult.errors.length > 0 && (
-              <div className="space-y-1 text-rose-700">
-                <div className="font-semibold">Validation Warnings:</div>
-                {uploadResult.errors.map((e: string, idx: number) => (
-                  <div key={idx} className="flex items-center gap-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    <span>{e}</span>
-                  </div>
+          <div className={`p-4 rounded-xl border text-xs ${
+            uploadResult.errors && uploadResult.errors.length > 0
+              ? 'bg-rose-50 border-rose-200 text-rose-900'
+              : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+          }`}>
+            <div className="font-bold">{uploadResult.status}</div>
+            {uploadResult.records_ingested && (
+              <p className="mt-1">Ingested {uploadResult.records_ingested} records.</p>
+            )}
+            {uploadResult.errors && (
+              <ul className="list-disc pl-5 mt-1 space-y-0.5">
+                {uploadResult.errors.map((err: string, idx: number) => (
+                  <li key={idx}>{err}</li>
                 ))}
-              </div>
+              </ul>
             )}
           </div>
         )}
       </div>
 
-      {/* Trial Records Table */}
-      <div className="bg-white rounded-2xl p-6 border border-stone-200 shadow-xs space-y-4">
+      {/* Trial Database Table */}
+      <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-stone-900">
-            Cataloged Empirical Trial Records ({trials.length})
+            {t('admin.trials_table_title')}
           </h3>
-          <span className="text-[11px] font-semibold px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full">
-            Labelled SAMPLE Data
-          </span>
+          <span className="text-xs text-stone-500 font-semibold">{trials.length} records</span>
         </div>
 
-        <div className="overflow-x-auto max-h-96">
+        <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-stone-200 text-stone-500 font-semibold bg-stone-50 sticky top-0">
-                <th className="py-2.5 px-3">Crop Combination</th>
-                <th className="py-2.5 px-3">Ratio</th>
-                <th className="py-2.5 px-3">Yield A (kg/ha)</th>
-                <th className="py-2.5 px-3">Yield B (kg/ha)</th>
-                <th className="py-2.5 px-3">LER</th>
-                <th className="py-2.5 px-3">Location &amp; Year</th>
-                <th className="py-2.5 px-3">Source Citation</th>
+              <tr className="border-b border-stone-200 text-stone-500 font-semibold bg-stone-50/50">
+                <th className="py-2.5 px-3">{t('admin.col_id')}</th>
+                <th className="py-2.5 px-3">{t('admin.col_crop_a')}</th>
+                <th className="py-2.5 px-3">{t('admin.col_crop_b')}</th>
+                <th className="py-2.5 px-3">{t('admin.col_ratio')}</th>
+                <th className="py-2.5 px-3">{t('admin.col_yield_a')}</th>
+                <th className="py-2.5 px-3">{t('admin.col_yield_b')}</th>
+                <th className="py-2.5 px-3">{t('admin.col_ler')}</th>
+                <th className="py-2.5 px-3">{t('admin.col_source')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100 text-stone-700">
-              {trials.map((t) => (
-                <tr key={t.id} className="hover:bg-stone-50/70 transition">
-                  <td className="py-3 px-3 font-bold text-stone-900">
-                    {t.crop_a_name} ({t.variety_a_name}) + {t.crop_b_name} ({t.variety_b_name})
-                  </td>
-                  <td className="py-3 px-3 font-semibold text-emerald-800">{t.row_ratio}</td>
-                  <td className="py-3 px-3">{t.yield_a_kg_ha.toLocaleString()}</td>
-                  <td className="py-3 px-3">{t.yield_b_kg_ha.toLocaleString()}</td>
-                  <td className="py-3 px-3 font-extrabold text-emerald-700">{t.ler.toFixed(2)}</td>
-                  <td className="py-3 px-3">{t.location} ({t.year})</td>
-                  <td className="py-3 px-3 text-stone-500 italic max-w-xs truncate" title={t.source}>
-                    {t.source}
-                  </td>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-stone-400">Loading trial records...</td>
                 </tr>
-              ))}
+              ) : trials.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-stone-400">No trial records in database.</td>
+                </tr>
+              ) : (
+                trials.slice(0, 20).map((tRecord) => (
+                  <tr key={tRecord.id} className="hover:bg-stone-50 transition">
+                    <td className="py-2.5 px-3 font-mono text-[11px] text-stone-400">#{tRecord.id}</td>
+                    <td className="py-2.5 px-3 font-semibold text-stone-900">{tRecord.crop_a_name} ({tRecord.variety_a_name})</td>
+                    <td className="py-2.5 px-3 font-semibold text-stone-900">{tRecord.crop_b_name} ({tRecord.variety_b_name})</td>
+                    <td className="py-2.5 px-3 font-bold text-emerald-800">{tRecord.row_ratio}</td>
+                    <td className="py-2.5 px-3">{tRecord.yield_a_kg_ha} kg/ha</td>
+                    <td className="py-2.5 px-3">{tRecord.yield_b_kg_ha} kg/ha</td>
+                    <td className="py-2.5 px-3 font-black text-emerald-700">{tRecord.ler.toFixed(2)}</td>
+                    <td className="py-2.5 px-3 text-stone-500 truncate max-w-44" title={tRecord.source}>
+                      {tRecord.institution} ({tRecord.year})
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

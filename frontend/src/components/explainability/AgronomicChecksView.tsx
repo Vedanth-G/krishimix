@@ -8,7 +8,35 @@ interface AgronomicChecksViewProps {
 }
 
 export const AgronomicChecksView: React.FC<AgronomicChecksViewProps> = ({ evaluation }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  const getStatusLabel = (status: string) => {
+    if (i18n.language === 'kn') {
+      return status === 'PASS' ? 'ಸುರಕ್ಷಿತ (PASS)' : status === 'WARNING' ? 'ಎಚ್ಚರಿಕೆ (WARNING)' : 'ಹೊಂದಾಣಿಕೆಯಿಲ್ಲ (FAIL)';
+    } else if (i18n.language === 'hi') {
+      return status === 'PASS' ? 'सफल (PASS)' : status === 'WARNING' ? 'सावधानी (WARNING)' : 'अस्वीकृत (FAIL)';
+    }
+    return status;
+  };
+
+  const getParameterPlainName = (param: string) => {
+    if (param.toLowerCase().includes('maturity')) {
+      return i18n.language === 'kn' ? 'ಬೆಳೆ ಕೊಯ್ಲಿನ ಅವಧಿ ಸಮತೋಲನ' : i18n.language === 'hi' ? 'फसल पकने की अवधि का संतुलन' : 'Harvest Timing Balance (Maturity Synchrony)';
+    }
+    if (param.toLowerCase().includes('canopy') || param.toLowerCase().includes('light')) {
+      return i18n.language === 'kn' ? 'ಸೂರ್ಯನ ಬಿಸಿಲು ಹಂಚಿಕೆ' : i18n.language === 'hi' ? 'धूप और ऊंचाई का बंटवारा' : 'Sunlight Sharing Balance (Canopy Competition)';
+    }
+    if (param.toLowerCase().includes('root')) {
+      return i18n.language === 'kn' ? 'ಬೇರಿನ ಆಳ ಮತ್ತು ನೀರಿನ ಹಂಚಿಕೆ' : i18n.language === 'hi' ? 'जड़ों की गहराई एवं नमी का बंटवारा' : 'Root Depth Separation (Moisture Sharing)';
+    }
+    if (param.toLowerCase().includes('water')) {
+      return i18n.language === 'kn' ? 'ನೀರಿನ ಅಗತ್ಯತೆ ಹೊಂದಾಣಿಕೆ' : i18n.language === 'hi' ? 'पानी की मांग अनुकूलता' : 'Water Need Compatibility';
+    }
+    if (param.toLowerCase().includes('ph')) {
+      return i18n.language === 'kn' ? 'ಮಣ್ಣಿನ ರಸಸಾರ ಸಹಿಷ್ಣುತೆ' : i18n.language === 'hi' ? 'मिट्टी का पीएच संतुलन' : 'Soil pH Tolerance';
+    }
+    return param;
+  };
 
   return (
     <div className="space-y-6">
@@ -17,10 +45,18 @@ export const AgronomicChecksView: React.FC<AgronomicChecksViewProps> = ({ evalua
           <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0" />
           <div>
             <h4 className="text-sm font-bold text-emerald-950">
-              Agronomic Safety &amp; Biological Compatibility Checks ({evaluation.checks.length} Rules Evaluated)
+              {i18n.language === 'kn'
+                ? `ಕೃಷಿ ಸುರಕ್ಷತೆ ಮತ್ತು ಜೈವಿಕ ಹೊಂದಾಣಿಕೆ ತಪಾಸಣೆ (${evaluation.checks.length} ನಿಯಮಗಳ ಪರಿಶೀಲನೆ)`
+                : i18n.language === 'hi'
+                ? `कृषि सुरक्षा एवं जैविक अनुकूलता जांच (${evaluation.checks.length} नियमों का परीक्षण)`
+                : `Agronomic Safety & Biological Compatibility Checks (${evaluation.checks.length} Rules Evaluated)`}
             </h4>
             <p className="text-xs text-emerald-800">
-              Every crop pair must satisfy botanical and microclimatic rules before layout recommendation.
+              {i18n.language === 'kn'
+                ? 'ಎರಡೂ ಬೆಳೆಗಳು ಪರಸ್ಪರ ಸ್ಪರ್ಧಿಸದೆ ಬೆಳೆಯಲು ಸಸ್ಯವಿಜ್ಞಾನದ ನಿಯಮಗಳನ್ನು ಪರಿಶೀಲಿಸಲಾಗಿದೆ.'
+                : i18n.language === 'hi'
+                ? 'दोनों फसलें बिना किसी टकराव के साथ बढ़ सकें, इसके लिए वानस्पतिक नियमों की जांच की गई है।'
+                : 'Every crop pair must satisfy botanical and microclimatic rules before layout recommendation.'}
             </p>
           </div>
         </div>
@@ -54,7 +90,7 @@ export const AgronomicChecksView: React.FC<AgronomicChecksViewProps> = ({ evalua
               <div className="flex-1 space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-wide text-stone-800">
-                    {chk.parameter}
+                    {getParameterPlainName(chk.parameter)}
                   </span>
                   <span
                     className={`text-[10px] uppercase font-black px-2 py-0.5 rounded-full ${
@@ -65,7 +101,7 @@ export const AgronomicChecksView: React.FC<AgronomicChecksViewProps> = ({ evalua
                         : 'bg-rose-100 text-rose-900'
                     }`}
                   >
-                    {chk.status}
+                    {getStatusLabel(chk.status)}
                   </span>
                 </div>
 
@@ -74,7 +110,8 @@ export const AgronomicChecksView: React.FC<AgronomicChecksViewProps> = ({ evalua
                 </p>
 
                 <p className="text-[11px] text-stone-500 font-normal italic pt-0.5">
-                  Scientific Basis: {chk.scientific_detail}
+                  {i18n.language === 'kn' ? 'ವೈಜ್ಞಾನಿಕ ಆಧಾರ: ' : i18n.language === 'hi' ? 'वैज्ञानिक आधार: ' : 'Scientific Basis: '}
+                  {chk.scientific_detail}
                 </p>
               </div>
             </div>

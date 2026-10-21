@@ -28,9 +28,13 @@ import {
   CloudRain,
   Bug,
   Sun,
-  Coins
+  Coins,
+  FileCheck,
+  Printer,
+  Sparkles
 } from 'lucide-react';
 import { speechHelper } from '../../utils/speech';
+import { printFarmPlanSummary } from '../../utils/exportLayout';
 
 interface Step5Props {
   evaluation: EvaluationResponse;
@@ -44,6 +48,8 @@ interface Step5Props {
   cropBId: number;
   varietyBId: number;
   rowRatio: string;
+  shapeType?: string;
+  photoPreview?: string;
   onGoToCompare?: () => void;
 }
 
@@ -59,10 +65,12 @@ export const Step5Results: React.FC<Step5Props> = ({
   cropBId,
   varietyBId,
   rowRatio,
+  shapeType = 'Regular',
+  photoPreview,
   onGoToCompare
 }) => {
   const { t, i18n } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'layout' | 'resources' | 'checks' | 'explain'>('layout');
+  const [activeTab, setActiveTab] = useState<'report' | 'layout' | 'resources' | 'checks' | 'explain'>('report');
   const [isSaved, setIsSaved] = useState<boolean>(false);
 
   const isUnsupported = evaluation.evidence_level === 'UNSUPPORTED';
@@ -70,11 +78,11 @@ export const Step5Results: React.FC<Step5Props> = ({
   const handleReadAloudVerdict = () => {
     let textToRead = '';
     if (i18n.language === 'kn') {
-      textToRead = `ಕೃಷಿ ತೀರ್ಪು: ${evaluation.verdict}. ${evaluation.verdict_summary}. ಭೂಮಿ ಸಮಾನ ಅನುಪಾತ ${evaluation.ler.toFixed(2)}. ${evaluation.explainability_narrative}`;
+      textToRead = `ಕೃಷಿ ತೀರ್ಪು: ${evaluation.verdict}. ${evaluation.verdict_summary}. ಭೂಮಿ ದಕ್ಷತೆ ಅಂಕ ${evaluation.ler.toFixed(2)}. ${evaluation.explainability_narrative}`;
     } else if (i18n.language === 'hi') {
-      textToRead = `कृषि निर्णय: ${evaluation.verdict}. ${evaluation.verdict_summary}. भूमि समतुल्य अनुपात ${evaluation.ler.toFixed(2)}. ${evaluation.explainability_narrative}`;
+      textToRead = `कृषि निर्णय: ${evaluation.verdict}. ${evaluation.verdict_summary}. भूमि दक्षता स्कोर ${evaluation.ler.toFixed(2)}. ${evaluation.explainability_narrative}`;
     } else {
-      textToRead = `Verdict: ${evaluation.verdict}. ${evaluation.verdict_summary}. Land Equivalent Ratio is ${evaluation.ler.toFixed(2)}. ${evaluation.explainability_narrative}`;
+      textToRead = `Verdict: ${evaluation.verdict}. ${evaluation.verdict_summary}. Land Productivity Score is ${evaluation.ler.toFixed(2)}. ${evaluation.explainability_narrative}`;
     }
     speechHelper.speak(textToRead, i18n.language);
   };
@@ -85,9 +93,14 @@ export const Step5Results: React.FC<Step5Props> = ({
     setTimeout(() => setIsSaved(false), 3000);
   };
 
+  const cropAName = evaluation.crop_a_summary.name;
+  const cropAVar = evaluation.crop_a_summary.variety;
+  const cropBName = evaluation.crop_b_summary.name;
+  const cropBVar = evaluation.crop_b_summary.variety;
+
   return (
     <div className="space-y-6">
-      {/* 1. Realistic Profit & Harvest Disclaimer Notice (Non-Negotiable Reality Notice) */}
+      {/* 1. Realistic Profit & Harvest Disclaimer Notice */}
       <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-300 text-xs text-amber-950 flex items-start gap-3 shadow-xs">
         <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
         <div className="space-y-0.5">
@@ -100,7 +113,7 @@ export const Step5Results: React.FC<Step5Props> = ({
         </div>
       </div>
 
-      {/* 2. Leading One-Line Verdict Banner (Critical UX Requirement) */}
+      {/* 2. Leading One-Line Verdict Banner */}
       <div
         className={`p-6 rounded-3xl border shadow-sm transition flex flex-col md:flex-row md:items-center justify-between gap-4 ${
           evaluation.verdict === 'Recommended'
@@ -140,8 +153,7 @@ export const Step5Results: React.FC<Step5Props> = ({
           </h2>
 
           <p className="text-xs text-stone-600 font-medium">
-            Configuration: {evaluation.crop_a_summary.name} ({evaluation.crop_a_summary.variety}) +{' '}
-            {evaluation.crop_b_summary.name} ({evaluation.crop_b_summary.variety}) in {rowRatio} arrangement.
+            Configuration: {cropAName} ({cropAVar}) + {cropBName} ({cropBVar}) in {rowRatio} arrangement.
           </p>
         </div>
 
@@ -190,7 +202,7 @@ export const Step5Results: React.FC<Step5Props> = ({
           onSelectAlternative={onSelectAlternative}
         />
       ) : (
-        /* If Supported, Render Performance Cards, Honest Risk Matrix, & Tabbed Views */
+        /* If Supported, Render Performance Cards, Realistic Risk Matrix, & Tabbed Views */
         <div className="space-y-6">
           {/* 4 Performance Metric Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -202,7 +214,7 @@ export const Step5Results: React.FC<Step5Props> = ({
               <div className="text-2xl font-black text-emerald-800 mt-1 flex items-baseline gap-1">
                 <span>{evaluation.ler.toFixed(2)}</span>
                 <span className="text-xs font-semibold text-emerald-600">
-                  (+{Math.round((evaluation.ler - 1.0) * 100)}% land gain)
+                  (+{Math.round((evaluation.ler - 1.0) * 100)}% bonus)
                 </span>
               </div>
               <p className="text-[11px] text-stone-500 mt-1">
@@ -220,7 +232,7 @@ export const Step5Results: React.FC<Step5Props> = ({
                 <span className="text-xs font-semibold text-stone-500">kg/acre</span>
               </div>
               <p className="text-[11px] text-stone-500 mt-1">
-                {evaluation.crop_a_summary.name}: {evaluation.yield_a_kg_per_acre}kg | {evaluation.crop_b_summary.name}: {evaluation.yield_b_kg_per_acre}kg
+                {cropAName}: {evaluation.yield_a_kg_per_acre}kg | {cropBName}: {evaluation.yield_b_kg_per_acre}kg
               </p>
             </div>
 
@@ -259,7 +271,7 @@ export const Step5Results: React.FC<Step5Props> = ({
             </div>
           </div>
 
-          {/* Real-World Risk Assessment (Un-Sugarcoated) */}
+          {/* Realistic Production Risk Assessment (Professional Phrasing) */}
           <div className="bg-white p-5 rounded-3xl border border-stone-200 shadow-xs space-y-4">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-amber-700" />
@@ -306,6 +318,19 @@ export const Step5Results: React.FC<Step5Props> = ({
 
           {/* Navigation Tabs */}
           <div className="flex border-b border-stone-200 gap-2 overflow-x-auto pb-1">
+            <button
+              type="button"
+              onClick={() => setActiveTab('report')}
+              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-xs transition shrink-0 ${
+                activeTab === 'report'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+              }`}
+            >
+              <FileCheck className="w-4 h-4" />
+              <span>{t('report.title')}</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setActiveTab('layout')}
@@ -361,11 +386,104 @@ export const Step5Results: React.FC<Step5Props> = ({
 
           {/* Tab Content Display */}
           <div className="pt-2">
+            {/* Farmer One-Page Summary Report (User Request 6) */}
+            {activeTab === 'report' && (
+              <div className="bg-white rounded-3xl p-6 md:p-8 border border-stone-200 shadow-sm space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-100 pb-4">
+                  <div>
+                    <h3 className="text-lg font-black text-stone-900 flex items-center gap-2">
+                      <FileCheck className="w-6 h-6 text-emerald-600" />
+                      {t('report.title')}
+                    </h3>
+                    <p className="text-xs text-stone-500">
+                      {t('report.subtitle')} • {areaAcres} {t('step2.acres_unit')} ({layout?.field_length_m}m × {layout?.field_breadth_m}m)
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => printFarmPlanSummary()}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-xs transition"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>{t('report.print_btn')}</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  {/* Step 1: What to sow */}
+                  <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 space-y-2">
+                    <span className="font-extrabold uppercase text-stone-800 text-xs block">
+                      {t('report.sowing_plan_title')}
+                    </span>
+                    <p className="text-stone-700 font-semibold leading-relaxed">
+                      Sow <b>{cropAName} ({cropAVar})</b> and <b>{cropBName} ({cropBVar})</b> in a <b>{rowRatio}</b> arrangement.
+                    </p>
+                    <p className="text-[11px] text-stone-500">
+                      For example in 2:1 ratio: plant 2 lines of {cropAName}, then 1 line of {cropBName}. Total lines in your field: {layout?.total_rows || 40}.
+                    </p>
+                  </div>
+
+                  {/* Step 2: Seed Quantity Needed */}
+                  <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 space-y-2">
+                    <span className="font-extrabold uppercase text-stone-800 text-xs block">
+                      {t('report.seeds_title')}
+                    </span>
+                    <div className="space-y-1 font-semibold text-stone-700">
+                      <div>• <b>{cropAName}:</b> {resources?.seed_crop_a_kg ? `${resources.seed_crop_a_kg} kg` : '8 kg'} certified seeds</div>
+                      <div>• <b>{cropBName}:</b> {resources?.seed_crop_b_kg ? `${resources.seed_crop_b_kg} kg` : '4 kg'} certified seeds</div>
+                      <div className="text-emerald-800 font-bold mt-1">Total seed cost: ~₹{resources?.seed_cost_total_inr.toLocaleString()}</div>
+                    </div>
+                  </div>
+
+                  {/* Step 3: Spacing on ground */}
+                  <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 space-y-2">
+                    <span className="font-extrabold uppercase text-stone-800 text-xs block">
+                      {t('report.spacing_title')}
+                    </span>
+                    <div className="space-y-1 font-semibold text-stone-700">
+                      <div>• <b>Line spacing:</b> Mark furrows 45 cm apart across the width of your field.</div>
+                      <div>• <b>Plant spacing:</b> Place seeds 15 cm apart along each line.</div>
+                      <div>• <b>Orientation:</b> Run rows {layout?.orientation || 'North-South'} for best morning and evening sunlight.</div>
+                    </div>
+                  </div>
+
+                  {/* Step 4: Expected harvest & profit */}
+                  <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-2">
+                    <span className="font-extrabold uppercase text-emerald-950 text-xs block">
+                      {t('report.harvest_title')} &amp; {t('report.profit_title')}
+                    </span>
+                    <div className="space-y-1 font-semibold text-emerald-950">
+                      <div>• <b>{cropAName}:</b> ~{evaluation.yield_a_kg_per_acre} kg harvest</div>
+                      <div>• <b>{cropBName}:</b> ~{evaluation.yield_b_kg_per_acre} kg harvest</div>
+                      <div className="text-emerald-800 font-black text-sm pt-1">
+                        Estimated Net Earnings: ~₹{evaluation.net_income_inr.toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 5: Golden Rules & Precautions */}
+                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs space-y-2">
+                  <span className="font-extrabold uppercase text-amber-950 text-xs block">
+                    {t('report.precautions_title')}
+                  </span>
+                  <ul className="space-y-1.5 text-amber-900 font-medium list-disc pl-5">
+                    <li>{t('report.rule1')}</li>
+                    <li>{t('report.rule2')}</li>
+                    <li>{t('report.rule3')}</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
             {activeTab === 'layout' && layout && (
               <PlantingLayoutView
                 layout={layout}
-                cropAName={evaluation.crop_a_summary.name}
-                cropBName={evaluation.crop_b_summary.name}
+                cropAName={cropAName}
+                cropBName={cropBName}
+                shapeType={shapeType}
+                photoPreview={photoPreview}
               />
             )}
 

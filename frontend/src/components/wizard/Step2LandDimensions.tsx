@@ -126,6 +126,60 @@ export const Step2LandDimensions: React.FC<Step2Props> = ({
   const calculatedAcres = Math.round((calculatedSqM / 4047.0) * 100) / 100;
   const isDimensionMatched = Math.abs(calculatedAcres - areaAcres) / (areaAcres || 1) < 0.08;
 
+  const shapeCards = [
+    {
+      id: 'Regular',
+      label: t('step2.shape_regular'),
+      desc: t('step2.shape_regular_desc'),
+      renderSvg: () => (
+        <svg viewBox="0 0 100 50" className="w-full h-12 my-1">
+          <rect x="5" y="5" width="90" height="40" rx="3" fill="#ecfdf5" stroke="#059669" strokeWidth="2" />
+          <line x1="12" y1="14" x2="88" y2="14" stroke="#059669" strokeWidth="2" strokeDasharray="3 2" />
+          <line x1="12" y1="24" x2="88" y2="24" stroke="#d97706" strokeWidth="2" strokeDasharray="3 2" />
+          <line x1="12" y1="34" x2="88" y2="34" stroke="#059669" strokeWidth="2" strokeDasharray="3 2" />
+        </svg>
+      )
+    },
+    {
+      id: 'Trapezoid',
+      label: t('step2.shape_trapezoid'),
+      desc: t('step2.shape_trapezoid_desc'),
+      renderSvg: () => (
+        <svg viewBox="0 0 100 50" className="w-full h-12 my-1">
+          <polygon points="20,5 80,5 95,45 5,45" fill="#ecfdf5" stroke="#059669" strokeWidth="2" />
+          <line x1="24" y1="15" x2="76" y2="15" stroke="#059669" strokeWidth="2" strokeDasharray="3 2" />
+          <line x1="18" y1="26" x2="82" y2="26" stroke="#d97706" strokeWidth="2" strokeDasharray="3 2" />
+          <line x1="12" y1="37" x2="88" y2="37" stroke="#059669" strokeWidth="2" strokeDasharray="3 2" />
+        </svg>
+      )
+    },
+    {
+      id: 'Contour',
+      label: t('step2.shape_contour'),
+      desc: t('step2.shape_contour_desc'),
+      renderSvg: () => (
+        <svg viewBox="0 0 100 50" className="w-full h-12 my-1">
+          <path d="M 8,8 Q 50,0 92,8 Q 98,28 90,44 Q 50,48 10,42 Q 2,22 8,8 Z" fill="#ecfdf5" stroke="#059669" strokeWidth="2" />
+          <path d="M 14,16 Q 50,11 86,16" stroke="#059669" strokeWidth="2" fill="none" strokeDasharray="3 2" />
+          <path d="M 11,26 Q 50,22 87,26" stroke="#d97706" strokeWidth="2" fill="none" strokeDasharray="3 2" />
+          <path d="M 13,36 Q 50,33 85,36" stroke="#059669" strokeWidth="2" fill="none" strokeDasharray="3 2" />
+        </svg>
+      )
+    },
+    {
+      id: 'Custom Boundary',
+      label: t('step2.shape_custom'),
+      desc: t('step2.shape_custom_desc'),
+      renderSvg: () => (
+        <svg viewBox="0 0 100 50" className="w-full h-12 my-1">
+          <polygon points="12,10 50,4 90,16 82,45 20,42" fill="#fef3c7" stroke="#d97706" strokeWidth="2" strokeDasharray="3 2" />
+          <circle cx="50" cy="25" r="9" fill="#d97706" opacity="0.2" />
+          <rect x="46" y="21" width="8" height="8" rx="1" fill="#d97706" />
+        </svg>
+      )
+    }
+  ];
+
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div className="text-center space-y-1">
@@ -252,34 +306,44 @@ export const Step2LandDimensions: React.FC<Step2Props> = ({
         </div>
       </div>
 
-      {/* Field Shape & Boundary Photo Upload */}
+      {/* Field Shape with Visual Previews (User Request 2) */}
       <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs space-y-4">
-        <label className="block text-xs font-bold text-stone-700 uppercase tracking-wide">
-          {t('step2.section4_title')}
-        </label>
+        <div>
+          <label className="block text-xs font-bold text-stone-700 uppercase tracking-wide">
+            {t('step2.section4_title')}
+          </label>
+          <span className="text-[11px] text-stone-500">
+            Select how your land boundary is formed to adapt planting furrows
+          </span>
+        </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {[
-            { id: 'Regular', label: t('step2.shape_regular') },
-            { id: 'Trapezoid', label: t('step2.shape_trapezoid') },
-            { id: 'Contour', label: t('step2.shape_contour') },
-            { id: 'Custom Boundary', label: t('step2.shape_custom') }
-          ].map((sh) => (
-            <button
-              key={sh.id}
-              type="button"
-              onClick={() => {
-                if (setShapeType) setShapeType(sh.id);
-              }}
-              className={`p-3 rounded-xl border text-center transition text-xs font-bold ${
-                shapeType === sh.id
-                  ? 'border-emerald-600 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-500/20'
-                  : 'border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700'
-              }`}
-            >
-              {sh.label}
-            </button>
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {shapeCards.map((sh) => {
+            const isSelected = shapeType === sh.id;
+            return (
+              <button
+                key={sh.id}
+                type="button"
+                onClick={() => {
+                  if (setShapeType) setShapeType(sh.id);
+                }}
+                className={`p-3.5 rounded-2xl border-2 text-left transition flex flex-col justify-between shadow-xs ${
+                  isSelected
+                    ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-500/20'
+                    : 'border-stone-200 bg-stone-50/50 hover:bg-stone-100 hover:border-stone-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-stone-900">{sh.label}</span>
+                  {isSelected && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
+                </div>
+
+                {sh.renderSvg()}
+
+                <p className="text-[11px] text-stone-500 mt-1 leading-tight">{sh.desc}</p>
+              </button>
+            );
+          })}
         </div>
 
         {/* Upload Dropzone */}
