@@ -193,6 +193,7 @@
     "empty_desc": "Create an evaluation in the Farm Planner and click 'Save Farm Plan' to store it here."
   },
   "report": {
+    "tab_title": "Summary Report",
     "title": "Farmer One-Page Summary Report",
     "subtitle": "Clear, practical sowing instructions for your field",
     "print_btn": "Print / Download Summary Report",

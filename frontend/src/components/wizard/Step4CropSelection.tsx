@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Crop, Variety } from '../../types';
 import { Sparkles, Sprout, ArrowRight, Check, AlertTriangle, Info, Sun, Clock, Zap } from 'lucide-react';
 import { fetchSuggestedCompanions } from '../../services/api';
+import { getLocalizedCropName } from '../../utils/cropNames';
 
 interface Step4Props {
   crops: Crop[];
@@ -37,7 +38,7 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
   soilType,
   setIsCropPairValid
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isSuggesting, setIsSuggesting] = useState<boolean>(false);
   const [suggestionList, setSuggestionList] = useState<any[]>([]);
 
@@ -164,7 +165,7 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
                     : 'border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-800'
                 }`}
               >
-                <div>{c.name}</div>
+                <div>{getLocalizedCropName(c.name, i18n.language)}</div>
                 <div className={`text-[10px] font-normal ${isSelected ? 'text-emerald-100' : 'text-stone-400'}`}>
                   {c.crop_type}
                 </div>
@@ -177,7 +178,7 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
         {varietiesA.length > 0 && (
           <div className="pt-2 border-t border-stone-100">
             <label className="block text-xs font-bold text-stone-600 mb-1.5">
-              {t('step4.select_variety_for')} {cropA?.name}:
+              {t('step4.select_variety_for')} {cropA?.name ? getLocalizedCropName(cropA.name, i18n.language) : ''}:
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {varietiesA.map((v) => {
@@ -254,12 +255,14 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
                     : 'border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-800'
                 }`}
               >
-                <div>{c.name}</div>
+                <div>{getLocalizedCropName(c.name, i18n.language)}</div>
                 <div className={`text-[10px] font-normal ${isSelected ? 'text-amber-100' : 'text-stone-400'}`}>
                   {c.crop_type}
                 </div>
                 {isAlsoCropA && (
-                  <span className="text-[9px] block text-rose-200 font-bold mt-0.5">Selected as Crop A</span>
+                  <span className="text-[9px] block text-rose-200 font-bold mt-0.5">
+                    {i18n.language === 'kn' ? 'ಬೆಳೆ A ಆಗಿ ಆಯ್ಕೆಯಾಗಿದೆ' : i18n.language === 'hi' ? 'फसल A के रूप में चयनित' : 'Selected as Crop A'}
+                  </span>
                 )}
               </button>
             );
@@ -270,7 +273,7 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
         {varietiesB.length > 0 && (
           <div className="pt-2 border-t border-stone-100">
             <label className="block text-xs font-bold text-stone-600 mb-1.5">
-              {t('step4.select_variety_for')} {cropB?.name}:
+              {t('step4.select_variety_for')} {cropB?.name ? getLocalizedCropName(cropB.name, i18n.language) : ''}:
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {varietiesB.map((v) => {

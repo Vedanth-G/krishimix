@@ -1,6 +1,7 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { EvidenceLevel, ConfidenceInterval } from '../../types';
-import { CheckCircle2, Sparkles, AlertTriangle, HelpCircle } from 'lucide-react';
+import { CheckCircle2, Sparkles, AlertTriangle } from 'lucide-react';
 
 interface EvidenceBadgeProps {
   level: EvidenceLevel;
@@ -17,6 +18,10 @@ export const EvidenceBadge: React.FC<EvidenceBadgeProps> = ({
   size = 'md',
   showDetails = true
 }) => {
+  const { t, i18n } = useTranslation();
+  const isKn = i18n.language === 'kn';
+  const isHi = i18n.language === 'hi';
+
   const sizeClasses = {
     sm: 'text-xs px-2.5 py-0.5',
     md: 'text-sm px-3.5 py-1',
@@ -31,11 +36,11 @@ export const EvidenceBadge: React.FC<EvidenceBadgeProps> = ({
           title="Direct trial observation from institutional research station"
         >
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>OBSERVED TRIAL</span>
+          <span>{isKn ? 'ಪ್ರಯೋಗ ದೃಢೀಕೃತ (OBSERVED)' : isHi ? 'परीक्षित ट्रायल (OBSERVED)' : 'OBSERVED TRIAL'}</span>
         </span>
         {showDetails && citationSource && (
           <span className="text-[11px] text-emerald-700 font-medium pl-1 italic">
-            Source: {citationSource}
+            {isKn ? 'ಮೂಲ: ' : isHi ? 'स्रोत: ' : 'Source: '}{citationSource}
           </span>
         )}
       </div>
@@ -50,7 +55,7 @@ export const EvidenceBadge: React.FC<EvidenceBadgeProps> = ({
           title="Algorithmic ML prediction based on validated agronomic rules"
         >
           <Sparkles className="w-4 h-4 text-sky-600 shrink-0" />
-          <span>MODEL-PREDICTED</span>
+          <span>{isKn ? 'ಮಾಡೆಲ್ ಮುನ್ನೋಟ (PREDICTED)' : isHi ? 'मॉडल अनुमान (PREDICTED)' : 'MODEL-PREDICTED'}</span>
         </span>
         {showDetails && confidenceInterval && (
           <span className="text-[11px] text-sky-700 font-medium pl-1">
@@ -68,11 +73,11 @@ export const EvidenceBadge: React.FC<EvidenceBadgeProps> = ({
         title="Agronomically incompatible pair. No layout or yield promises fabricated."
       >
         <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-        <span>UNSUPPORTED</span>
+        <span>{isKn ? 'ಶಿಫಾರಸು ಇಲ್ಲ (UNSUPPORTED)' : isHi ? 'अनुशंसित नहीं (UNSUPPORTED)' : 'UNSUPPORTED'}</span>
       </span>
       {showDetails && (
         <span className="text-[11px] text-rose-700 font-medium pl-1">
-          Physiological competition / rule violation
+          {isKn ? 'ಬೆಳೆಗಳ ನಡುವೆ ತೀವ್ರ ಪೈಪೋಟಿ' : isHi ? 'फसलों के बीच जैविक संघर्ष' : 'Physiological competition / rule violation'}
         </span>
       )}
     </div>

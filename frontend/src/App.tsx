@@ -341,146 +341,203 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-stone-900 font-sans flex flex-col">
+    <div className="min-h-screen bg-[#faf8f5] text-stone-900 font-sans flex flex-col antialiased">
       {/* Top Navigation Header */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-xs">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          {/* Logo & Brand */}
-          <div
-            onClick={() => { setNavTab('wizard'); setCurrentStep(1); }}
-            className="flex items-center gap-2.5 cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-2xl bg-emerald-700 flex items-center justify-center text-white shadow-sm">
-              <Sprout className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-lg font-black tracking-tight text-stone-900">KrishiMix</span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
-                  v1.1
-                </span>
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            {/* Logo & Brand */}
+            <div
+              onClick={() => { setNavTab('wizard'); setCurrentStep(1); }}
+              className="flex items-center gap-2 sm:gap-2.5 cursor-pointer shrink-0"
+            >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-emerald-700 flex items-center justify-center text-white shadow-sm shrink-0">
+                <Sprout className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <p className="text-[10px] text-stone-500 font-medium hidden sm:block">
-                Agronomy Decision Support &amp; Planting Layouts
-              </p>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-base sm:text-lg font-black tracking-tight text-stone-900">KrishiMix</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
+                    v1.1
+                  </span>
+                </div>
+                <p className="text-[10px] text-stone-500 font-medium hidden sm:block">
+                  Agronomy Decision Support &amp; Planting Layouts
+                </p>
+              </div>
+            </div>
+
+            {/* Desktop Navigation Tabs (Hidden on mobile, shown in subbar) */}
+            <nav className="hidden md:flex items-center gap-1 bg-stone-100 p-1 rounded-2xl border border-stone-200">
+              <button
+                type="button"
+                onClick={() => { setNavTab('wizard'); setSelectedPlansToCompare(null); }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                  navTab === 'wizard'
+                    ? 'bg-white text-emerald-800 shadow-xs'
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                <Compass className="w-3.5 h-3.5" />
+                <span>{t('nav.wizard')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setNavTab('compare')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                  navTab === 'compare'
+                    ? 'bg-white text-emerald-800 shadow-xs'
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                <Columns className="w-3.5 h-3.5" />
+                <span>{t('nav.compare')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setNavTab('saved')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                  navTab === 'saved'
+                    ? 'bg-white text-emerald-800 shadow-xs'
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                <Bookmark className="w-3.5 h-3.5" />
+                <span>{t('nav.saved')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setNavTab('admin')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                  navTab === 'admin'
+                    ? 'bg-white text-emerald-800 shadow-xs'
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>{t('nav.admin')}</span>
+              </button>
+            </nav>
+
+            {/* Right Action Tools: Prominent Audio Pill, Language Switcher, Offline Pill */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {/* Functional Audio Listen / Stop Pill */}
+              <button
+                type="button"
+                onClick={handleToggleSpeech}
+                className={`px-2.5 sm:px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 text-xs font-bold shadow-xs active:scale-95 ${
+                  isSpeaking
+                    ? 'bg-rose-50 border-rose-300 text-rose-700 animate-pulse ring-2 ring-rose-400/30'
+                    : 'bg-emerald-50/90 border-emerald-300 text-emerald-800 hover:bg-emerald-100'
+                }`}
+                title={isSpeaking ? 'Stop reading audio' : 'Read aloud current screen in audio'}
+              >
+                {isSpeaking ? (
+                  <>
+                    <VolumeX className="w-4 h-4 text-rose-600" />
+                    <span>{t('nav.stop_audio')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-4 h-4 text-emerald-700" />
+                    <span className="hidden sm:inline">{t('nav.listen_page')}</span>
+                  </>
+                )}
+              </button>
+
+              {/* Language Switcher */}
+              <div className="flex items-center border border-stone-200 rounded-xl bg-white overflow-hidden text-xs font-bold shrink-0 shadow-xs">
+                <button
+                  type="button"
+                  onClick={() => handleLanguageChange('en')}
+                  className={`px-2 sm:px-2.5 py-1.5 transition ${i18n.language === 'en' ? 'bg-emerald-700 text-white font-extrabold' : 'text-stone-600 hover:bg-stone-50'}`}
+                >
+                  EN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleLanguageChange('kn')}
+                  className={`px-2 sm:px-2.5 py-1.5 transition ${i18n.language === 'kn' ? 'bg-emerald-700 text-white font-extrabold' : 'text-stone-600 hover:bg-stone-50'}`}
+                >
+                  ಕನ್ನಡ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleLanguageChange('hi')}
+                  className={`px-2 sm:px-2.5 py-1.5 transition ${i18n.language === 'hi' ? 'bg-emerald-700 text-white font-extrabold' : 'text-stone-600 hover:bg-stone-50'}`}
+                >
+                  हिन्दी
+                </button>
+              </div>
+
+              {/* Offline PWA Pill */}
+              <span
+                className="hidden lg:inline-flex items-center gap-1 px-2.5 py-1 bg-stone-100 text-stone-600 border border-stone-200 rounded-full text-[10px] font-semibold shrink-0"
+                title="PWA Offline Storage Active"
+              >
+                <Wifi className="w-3 h-3 text-emerald-600" />
+                <span>{t('app.offline_ready')}</span>
+              </span>
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <nav className="flex items-center gap-1 bg-stone-100 p-1 rounded-2xl border border-stone-200">
+          {/* Mobile Navigation Sub-bar (Dedicated clean row for mobile screens) */}
+          <nav className="flex md:hidden items-center justify-between gap-1 bg-stone-100/90 p-1 mt-2.5 rounded-xl border border-stone-200/80 text-xs">
             <button
               type="button"
               onClick={() => { setNavTab('wizard'); setSelectedPlansToCompare(null); }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              className={`flex-1 py-1.5 rounded-lg font-bold transition flex items-center justify-center gap-1 ${
                 navTab === 'wizard'
                   ? 'bg-white text-emerald-800 shadow-xs'
                   : 'text-stone-600 hover:text-stone-900'
               }`}
             >
               <Compass className="w-3.5 h-3.5" />
-              <span>{t('nav.wizard')}</span>
+              <span className="truncate">{t('nav.wizard')}</span>
             </button>
 
             <button
               type="button"
               onClick={() => setNavTab('compare')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              className={`flex-1 py-1.5 rounded-lg font-bold transition flex items-center justify-center gap-1 ${
                 navTab === 'compare'
                   ? 'bg-white text-emerald-800 shadow-xs'
                   : 'text-stone-600 hover:text-stone-900'
               }`}
             >
               <Columns className="w-3.5 h-3.5" />
-              <span>{t('nav.compare')}</span>
+              <span className="truncate">{t('nav.compare')}</span>
             </button>
 
             <button
               type="button"
               onClick={() => setNavTab('saved')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              className={`flex-1 py-1.5 rounded-lg font-bold transition flex items-center justify-center gap-1 ${
                 navTab === 'saved'
                   ? 'bg-white text-emerald-800 shadow-xs'
                   : 'text-stone-600 hover:text-stone-900'
               }`}
             >
               <Bookmark className="w-3.5 h-3.5" />
-              <span>{t('nav.saved')}</span>
+              <span className="truncate">{t('nav.saved')}</span>
             </button>
 
             <button
               type="button"
               onClick={() => setNavTab('admin')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              className={`flex-1 py-1.5 rounded-lg font-bold transition flex items-center justify-center gap-1 ${
                 navTab === 'admin'
                   ? 'bg-white text-emerald-800 shadow-xs'
                   : 'text-stone-600 hover:text-stone-900'
               }`}
             >
               <Database className="w-3.5 h-3.5" />
-              <span>{t('nav.admin')}</span>
+              <span className="truncate">{t('nav.admin')}</span>
             </button>
           </nav>
-
-          {/* Right Action Tools: Prominent Audio Pill, Language Switcher, Offline Pill */}
-          <div className="flex items-center gap-2">
-            {/* Functional Audio Listen / Stop Pill */}
-            <button
-              type="button"
-              onClick={handleToggleSpeech}
-              className={`px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 text-xs font-bold shadow-xs ${
-                isSpeaking
-                  ? 'bg-rose-50 border-rose-300 text-rose-700 animate-pulse ring-2 ring-rose-400/30'
-                  : 'bg-emerald-50/90 border-emerald-300 text-emerald-800 hover:bg-emerald-100'
-              }`}
-              title={isSpeaking ? 'Stop reading audio' : 'Read aloud current screen in audio'}
-            >
-              {isSpeaking ? (
-                <>
-                  <VolumeX className="w-4 h-4 text-rose-600" />
-                  <span>{t('nav.stop_audio')}</span>
-                </>
-              ) : (
-                <>
-                  <Volume2 className="w-4 h-4 text-emerald-700" />
-                  <span className="hidden sm:inline">{t('nav.listen_page')}</span>
-                </>
-              )}
-            </button>
-
-            {/* Language Switcher */}
-            <div className="flex items-center border border-stone-200 rounded-xl bg-white overflow-hidden text-xs font-bold shrink-0 shadow-xs">
-              <button
-                type="button"
-                onClick={() => handleLanguageChange('en')}
-                className={`px-2.5 py-1.5 transition ${i18n.language === 'en' ? 'bg-emerald-700 text-white' : 'text-stone-600 hover:bg-stone-50'}`}
-              >
-                EN
-              </button>
-              <button
-                type="button"
-                onClick={() => handleLanguageChange('kn')}
-                className={`px-2.5 py-1.5 transition ${i18n.language === 'kn' ? 'bg-emerald-700 text-white' : 'text-stone-600 hover:bg-stone-50'}`}
-              >
-                ಕನ್ನಡ
-              </button>
-              <button
-                type="button"
-                onClick={() => handleLanguageChange('hi')}
-                className={`px-2.5 py-1.5 transition ${i18n.language === 'hi' ? 'bg-emerald-700 text-white' : 'text-stone-600 hover:bg-stone-50'}`}
-              >
-                हिन्दी
-              </button>
-            </div>
-
-            {/* Offline PWA Pill */}
-            <span
-              className="hidden lg:inline-flex items-center gap-1 px-2.5 py-1 bg-stone-100 text-stone-600 border border-stone-200 rounded-full text-[10px] font-semibold shrink-0"
-              title="PWA Offline Storage Active"
-            >
-              <Wifi className="w-3 h-3 text-emerald-600" />
-              <span>{t('app.offline_ready')}</span>
-            </span>
-          </div>
         </div>
       </header>
 
@@ -529,7 +586,7 @@ export const App: React.FC = () => {
               </div>
 
               {/* 5 Step Step Pills */}
-              <div className="grid grid-cols-5 gap-1 sm:gap-2">
+              <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
                 {[
                   { num: 1, label: t('pills.season') },
                   { num: 2, label: t('pills.land') },
@@ -543,7 +600,7 @@ export const App: React.FC = () => {
                     onClick={() => {
                       if (s.num < currentStep || evaluation) setCurrentStep(s.num);
                     }}
-                    className={`py-2 px-1 rounded-xl text-center transition text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-1 ${
+                    className={`py-2 px-1 rounded-xl text-center transition text-xs font-bold flex items-center justify-center gap-1.5 ${
                       currentStep === s.num
                         ? 'bg-emerald-700 text-white shadow-xs'
                         : s.num < currentStep
@@ -551,10 +608,10 @@ export const App: React.FC = () => {
                         : 'bg-stone-50 text-stone-400'
                     }`}
                   >
-                    <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] bg-black/10">
+                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black bg-black/10 shrink-0">
                       {s.num}
                     </span>
-                    <span className="truncate">{s.label}</span>
+                    <span className="truncate hidden sm:inline">{s.label}</span>
                   </button>
                 ))}
               </div>

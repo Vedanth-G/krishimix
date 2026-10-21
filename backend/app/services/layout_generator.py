@@ -444,15 +444,23 @@ class LayoutGenerator:
 
         lines.append('  </g>')  # END OF CLIPPED FIELD GROUP
 
-        # 4. Outer Physical Bund (ವರಂಬು / ಬದು)
-        lines.append(f'  <polygon points="{poly_svg_str}" fill="none" stroke="{COLOR_BUND}" stroke-width="3.5" stroke-dasharray="7,4" filter="url(#bundShadow)" />')
+        # 4. Outer Physical Bund (ವರಂಬು / ಬದು) - Multi-layer Earthen Ridge
+        lines.append(f'    <polygon points="{poly_svg_str}" fill="none" stroke="{COLOR_BUND}" stroke-width="7" stroke-linejoin="round" filter="url(#bundShadow)" />')
+        lines.append(f'    <polygon points="{poly_svg_str}" fill="none" stroke="#d97706" stroke-width="2.5" stroke-dasharray="8,6" />')
+
+        # Boundary survey stones at polygon corners (ಹದ್ದುಬಸ್ತು ಕಲ್ಲು)
+        for idx, pt in enumerate(poly_points):
+            cx = sx(pt[0])
+            cy = sy(pt[1])
+            lines.append(f'    <rect x="{cx - 4.5:.1f}" y="{cy - 4.5:.1f}" width="9" height="9" fill="#ffffff" stroke="#1e293b" stroke-width="1.5" rx="1.5" />')
+            lines.append(f'    <circle cx="{cx:.1f}" cy="{cy:.1f}" r="1.5" fill="#dc2626" />')
 
         # Outer bund label badge
         p_first = poly_points[0]
         p_sec = poly_points[1] if len(poly_points) > 1 else (L, 0)
         bund_label_x = sx((p_first[0] + p_sec[0]) / 2.0)
         bund_label_y = sy((p_first[1] + p_sec[1]) / 2.0) - 8
-        lines.append(f'  <text x="{bund_label_x:.1f}" y="{bund_label_y:.1f}" font-size="10" font-family="sans-serif" font-weight="700" fill="#78350f" text-anchor="middle">ವರಂಬು / ಬದು (Farm Bund)</text>')
+        lines.append(f'    <text x="{bund_label_x:.1f}" y="{bund_label_y:.1f}" font-size="10" font-family="sans-serif" font-weight="700" fill="#78350f" text-anchor="middle">ವರಂಬು / ಬದು (Farm Bund) 📍</text>')
 
         # 5. Farmer-Centric Measurement Brackets (no scientific Cartesian ticks)
         # Top bracket: Field Length
