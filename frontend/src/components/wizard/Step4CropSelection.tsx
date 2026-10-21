@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Crop, Variety } from '../../types';
 import { Sparkles, Sprout, ArrowRight, Check, AlertCircle } from 'lucide-react';
 import { fetchSuggestedCompanions } from '../../services/api';
@@ -34,6 +35,7 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
   season,
   soilType
 }) => {
+  const { t } = useTranslation();
   const [isSuggesting, setIsSuggesting] = useState<boolean>(false);
   const [suggestionList, setSuggestionList] = useState<any[]>([]);
 
@@ -89,9 +91,9 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
       <div className="text-center space-y-1">
-        <h2 className="text-xl font-black text-stone-900">Choose Crops & Varieties</h2>
+        <h2 className="text-xl font-black text-stone-900">{t('step4.title')}</h2>
         <p className="text-xs text-stone-500">
-          Intercrop success depends on height harmony, maturity timing, and biological synergy.
+          {t('step4.desc')}
         </p>
       </div>
 
@@ -100,10 +102,10 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
         <div className="flex items-center justify-between">
           <label className="text-xs font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
             <Sprout className="w-4 h-4 text-emerald-600" />
-            1. Select Primary Crop (Row A)
+            {t('step4.section1_title')}
           </label>
           <span className="text-xs font-semibold px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full">
-            Dominant / Main Harvest
+            {t('step4.section1_badge')}
           </span>
         </div>
 
@@ -135,7 +137,7 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
         {varietiesA.length > 0 && (
           <div className="pt-2 border-t border-stone-100">
             <label className="block text-xs font-bold text-stone-600 mb-1.5">
-              Select Specific Variety for {cropA?.name}:
+              {t('step4.select_variety_for')} {cropA?.name}:
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {varietiesA.map((v) => {
@@ -174,7 +176,7 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-white font-extrabold text-xs shadow-md hover:from-amber-600 hover:to-amber-700 transition"
         >
           <Sparkles className="w-4 h-4" />
-          <span>{isSuggesting ? 'Analyzing Trials...' : '✨ Suggest Best Companion For Me'}</span>
+          <span>{isSuggesting ? t('step4.suggesting') : t('step4.suggest_btn')}</span>
         </button>
       </div>
 
@@ -183,10 +185,10 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
         <div className="flex items-center justify-between">
           <label className="text-xs font-black uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
             <Sprout className="w-4 h-4 text-amber-600" />
-            2. Select Companion Crop (Row B)
+            {t('step4.section2_title')}
           </label>
           <span className="text-xs font-semibold px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full">
-            Pulse / Synergistic Intercrop
+            {t('step4.section2_badge')}
           </span>
         </div>
 
@@ -218,7 +220,7 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
         {varietiesB.length > 0 && (
           <div className="pt-2 border-t border-stone-100">
             <label className="block text-xs font-bold text-stone-600 mb-1.5">
-              Select Specific Variety for {cropB?.name}:
+              {t('step4.select_variety_for')} {cropB?.name}:
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {varietiesB.map((v) => {
@@ -251,7 +253,7 @@ export const Step4CropSelection: React.FC<Step4Props> = ({
       {/* Row Proportion Selector */}
       <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs space-y-3">
         <label className="block text-xs font-bold text-stone-700 uppercase tracking-wide">
-          3. Select Planting Row Proportion (Row Ratio)
+          {t('step4.section3_title')}
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {rowRatios.map((item) => {

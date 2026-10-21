@@ -1,8 +1,9 @@
 {
   "app": {
     "title": "KrishiMix",
-    "subtitle": "Smallholder Intercropping & Planting Layout System",
-    "tagline": "Science-backed variety pairing for higher land productivity"
+    "subtitle": "Agronomy Decision Support & Planting Layouts",
+    "tagline": "Science-backed variety pairing for higher land productivity",
+    "offline_ready": "Offline Ready"
   },
   "nav": {
     "wizard": "Plan Farm",
@@ -12,6 +13,67 @@
     "read_aloud": "Read Aloud",
     "stop_reading": "Stop Audio",
     "voice_input": "Voice Search"
+  },
+  "pills": {
+    "season": "Season",
+    "land": "Land",
+    "soil_water": "Soil/Water",
+    "crops": "Crops",
+    "results": "Results"
+  },
+  "step1": {
+    "title": "Select Season & Location",
+    "desc": "Planting season dictates rainfall, day length, and maturity synchrony.",
+    "section1_title": "1. Choose Agricultural Season",
+    "kharif_label": "Kharif (Monsoon)",
+    "kharif_sub": "June – October",
+    "rabi_label": "Rabi (Winter)",
+    "rabi_sub": "October – February",
+    "summer_label": "Summer",
+    "summer_sub": "March – May",
+    "section2_title": "2. Farm Location & District",
+    "location_placeholder": "e.g. Dharwad, Karnataka",
+    "quick_select": "Quick Select Common Research Station Regions:"
+  },
+  "step2": {
+    "title": "Land Size & Dimensions",
+    "desc": "Precision row calculations depend on field boundary meters.",
+    "section1_title": "1. Total Land Area (Acres)",
+    "custom_or": "Or custom:",
+    "acres_unit": "acres",
+    "section2_title": "2. Physical Field Dimensions (Meters)",
+    "section2_sub": "Rows run along length",
+    "field_length": "Field Length (m)",
+    "field_length_sub": "Parallel to planting furrow lines",
+    "field_breadth": "Field Breadth (m)",
+    "field_breadth_sub": "Cross-width where rows stack",
+    "section3_title": "3. Row Orientation",
+    "north_south_title": "North - South (Recommended)",
+    "north_south_desc": "Both sides receive uniform morning and evening sunlight",
+    "east_west_title": "East - West",
+    "east_west_desc": "Used when field contour slope requires cross-slope furrowing"
+  },
+  "step3": {
+    "title": "Soil Condition & Irrigation",
+    "desc": "Incompatible root moisture and pH will automatically trigger agronomic safety warnings.",
+    "section1_title": "1. Field Soil Type",
+    "section2_title": "2. Soil pH (Acidity / Alkalinity)",
+    "section3_title": "3. Available Irrigation Supply",
+    "acidic": "Acidic",
+    "neutral": "Neutral & Ideal",
+    "alkaline": "Alkaline"
+  },
+  "step4": {
+    "title": "Choose Crops & Varieties",
+    "desc": "Intercrop success depends on height harmony, maturity timing, and biological synergy.",
+    "section1_title": "1. Select Primary Crop (Row A)",
+    "section1_badge": "Dominant / Main Harvest",
+    "select_variety_for": "Select Specific Variety for",
+    "suggest_btn": "✨ Suggest Best Companion For Me",
+    "suggesting": "Analyzing Trials...",
+    "section2_title": "2. Select Companion Crop (Row B)",
+    "section2_badge": "Pulse / Synergistic Intercrop",
+    "section3_title": "3. Select Planting Row Proportion (Row Ratio)"
   },
   "wizard": {
     "step": "Step {{current}} of {{total}}",
@@ -27,8 +89,8 @@
     "step5_desc": "Evidence-backed layout and resource plan",
     "next": "Continue",
     "back": "Back",
-    "suggest_for_me": "Suggest for Me",
-    "evaluate_now": "Evaluate Intercropping Plan"
+    "evaluate_now": "Evaluate Intercropping Plan",
+    "evaluating": "Evaluating Agronomy..."
   },
   "evidence": {
     "observed": "OBSERVED",
@@ -39,16 +101,6 @@
     "unsupported_desc": "Agronomic rules violated. Incompatible pairing.",
     "legend_title": "Evidence Transparency Guide",
     "rule_transparency": "Never Present Predictions as Observations"
-  },
-  "crops": {
-    "primary_crop": "Primary Crop (Row A)",
-    "companion_crop": "Companion Crop (Row B)",
-    "select_variety": "Select Seed Variety",
-    "row_ratio": "Planting Row Proportion",
-    "duration": "Maturity",
-    "height": "Height",
-    "canopy": "Canopy",
-    "root": "Root Horizon"
   },
   "results": {
     "verdict_title": "Agronomic Verdict",
@@ -65,7 +117,7 @@
     "tab_explain": "Why This Result?",
     "export_pdf": "Export PDF Summary",
     "export_png": "Save Layout Image",
-    "save_plan": "Save Plan to Device"
+    "save_plan": "Save Farm Plan"
   },
   "unsupported": {
     "heading": "This Combination Cannot Be Recommended",

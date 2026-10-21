@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sun, CloudRain, Snowflake, MapPin } from 'lucide-react';
 
 interface Step1Props {
@@ -18,10 +19,30 @@ export const Step1LocationSeason: React.FC<Step1Props> = ({
   zone,
   setZone
 }) => {
+  const { t } = useTranslation();
+
   const seasons = [
-    { id: 'Kharif', label: 'Kharif (Monsoon)', sub: 'June – October', icon: CloudRain, color: 'border-emerald-500 bg-emerald-50/50' },
-    { id: 'Rabi', label: 'Rabi (Winter)', sub: 'October – February', icon: Snowflake, color: 'border-sky-500 bg-sky-50/50' },
-    { id: 'Summer', label: 'Summer', sub: 'March – May', icon: Sun, color: 'border-amber-500 bg-amber-50/50' }
+    {
+      id: 'Kharif',
+      label: t('step1.kharif_label'),
+      sub: t('step1.kharif_sub'),
+      icon: CloudRain,
+      color: 'border-emerald-500 bg-emerald-50/50'
+    },
+    {
+      id: 'Rabi',
+      label: t('step1.rabi_label'),
+      sub: t('step1.rabi_sub'),
+      icon: Snowflake,
+      color: 'border-sky-500 bg-sky-50/50'
+    },
+    {
+      id: 'Summer',
+      label: t('step1.summer_label'),
+      sub: t('step1.summer_sub'),
+      icon: Sun,
+      color: 'border-amber-500 bg-amber-50/50'
+    }
   ];
 
   const popularLocations = [
@@ -35,16 +56,16 @@ export const Step1LocationSeason: React.FC<Step1Props> = ({
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div className="text-center space-y-1">
-        <h2 className="text-xl font-black text-stone-900">Select Season & Location</h2>
+        <h2 className="text-xl font-black text-stone-900">{t('step1.title')}</h2>
         <p className="text-xs text-stone-500">
-          Planting season dictates rainfall, day length, and maturity synchrony.
+          {t('step1.desc')}
         </p>
       </div>
 
       {/* Season Cards */}
       <div className="space-y-2">
         <label className="block text-xs font-bold text-stone-700 uppercase tracking-wide">
-          1. Choose Agricultural Season
+          {t('step1.section1_title')}
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {seasons.map((s) => {
@@ -75,7 +96,7 @@ export const Step1LocationSeason: React.FC<Step1Props> = ({
       {/* Location Input with Quick Suggestion Chips */}
       <div className="space-y-3 bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
         <label className="block text-xs font-bold text-stone-700 uppercase tracking-wide">
-          2. Farm Location & District
+          {t('step1.section2_title')}
         </label>
         <div className="relative">
           <MapPin className="absolute left-3.5 top-3.5 w-4 h-4 text-emerald-600" />
@@ -83,14 +104,14 @@ export const Step1LocationSeason: React.FC<Step1Props> = ({
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="e.g. Dharwad, Karnataka"
+            placeholder={t('step1.location_placeholder')}
             className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-sm font-semibold text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
 
         <div className="pt-2">
           <span className="text-[11px] font-semibold text-stone-500 block mb-1.5">
-            Quick Select Common Research Station Regions:
+            {t('step1.quick_select')}
           </span>
           <div className="flex flex-wrap gap-1.5">
             {popularLocations.map((p, idx) => (

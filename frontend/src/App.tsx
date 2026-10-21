@@ -362,25 +362,25 @@ export const App: React.FC = () => {
             </button>
 
             {/* Language Switcher */}
-            <div className="flex items-center border border-stone-200 rounded-xl bg-white overflow-hidden text-xs font-bold">
+            <div className="flex items-center border border-stone-200 rounded-xl bg-white overflow-hidden text-xs font-bold shrink-0 shadow-xs">
               <button
                 type="button"
                 onClick={() => handleLanguageChange('en')}
-                className={`px-2 py-1.5 transition ${i18n.language === 'en' ? 'bg-emerald-700 text-white' : 'text-stone-600 hover:bg-stone-50'}`}
+                className={`px-2.5 py-1.5 transition ${i18n.language === 'en' ? 'bg-emerald-700 text-white' : 'text-stone-600 hover:bg-stone-50'}`}
               >
                 EN
               </button>
               <button
                 type="button"
                 onClick={() => handleLanguageChange('kn')}
-                className={`px-2 py-1.5 transition ${i18n.language === 'kn' ? 'bg-emerald-700 text-white' : 'text-stone-600 hover:bg-stone-50'}`}
+                className={`px-2.5 py-1.5 transition ${i18n.language === 'kn' ? 'bg-emerald-700 text-white' : 'text-stone-600 hover:bg-stone-50'}`}
               >
                 ಕನ್ನಡ
               </button>
               <button
                 type="button"
                 onClick={() => handleLanguageChange('hi')}
-                className={`px-2 py-1.5 transition ${i18n.language === 'hi' ? 'bg-emerald-700 text-white' : 'text-stone-600 hover:bg-stone-50'}`}
+                className={`px-2.5 py-1.5 transition ${i18n.language === 'hi' ? 'bg-emerald-700 text-white' : 'text-stone-600 hover:bg-stone-50'}`}
               >
                 हिन्दी
               </button>
@@ -388,11 +388,11 @@ export const App: React.FC = () => {
 
             {/* Offline PWA Pill */}
             <span
-              className="hidden lg:inline-flex items-center gap-1 px-2.5 py-1 bg-stone-100 text-stone-600 border border-stone-200 rounded-full text-[10px] font-semibold"
+              className="hidden lg:inline-flex items-center gap-1 px-2.5 py-1 bg-stone-100 text-stone-600 border border-stone-200 rounded-full text-[10px] font-semibold shrink-0"
               title="PWA Offline Storage Active"
             >
               <Wifi className="w-3 h-3 text-emerald-600" />
-              <span>Offline Ready</span>
+              <span>{t('app.offline_ready')}</span>
             </span>
           </div>
         </div>
@@ -430,11 +430,11 @@ export const App: React.FC = () => {
               {/* 5 Step Step Pills */}
               <div className="grid grid-cols-5 gap-1 sm:gap-2">
                 {[
-                  { num: 1, label: 'Season' },
-                  { num: 2, label: 'Land' },
-                  { num: 3, label: 'Soil/Water' },
-                  { num: 4, label: 'Crops' },
-                  { num: 5, label: 'Results' }
+                  { num: 1, label: t('pills.season') },
+                  { num: 2, label: t('pills.land') },
+                  { num: 3, label: t('pills.soil_water') },
+                  { num: 4, label: t('pills.crops') },
+                  { num: 5, label: t('pills.results') }
                 ].map((s) => (
                   <button
                     key={s.num}
@@ -563,7 +563,7 @@ export const App: React.FC = () => {
                   className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950 text-white text-sm font-black shadow-md transition"
                 >
                   <Sparkles className={`w-4 h-4 text-amber-300 ${isEvaluating ? 'animate-spin' : ''}`} />
-                  <span>{isEvaluating ? 'Evaluating Agronomy...' : t('wizard.evaluate_now')}</span>
+                  <span>{isEvaluating ? t('wizard.evaluating') : t('wizard.evaluate_now')}</span>
                 </button>
               )}
             </div>
