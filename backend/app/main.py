@@ -65,3 +65,11 @@ def health_check():
         "service": "KrishiMix Decision System",
         "version": "1.0.0"
     }
+
+# Mount frontend dist as static files if built
+import os
+from fastapi.staticfiles import StaticFiles
+
+frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist"))
+if os.path.exists(frontend_dist):
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
