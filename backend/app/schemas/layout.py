@@ -63,3 +63,4 @@ class LayoutGenerateRequest(BaseModel):
     pathway_width_m: float = 0.8
     orientation: str = "North-South"
     shape_type: Optional[str] = "Regular"
+    lang: Optional[str] = "en"

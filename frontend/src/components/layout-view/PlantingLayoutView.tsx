@@ -77,7 +77,8 @@ export const PlantingLayoutView: React.FC<PlantingLayoutViewProps> = ({
         variety_b_name: layout.dimension_table[1]?.crop_name.split('(')[1]?.replace(')', '') || 'Pulse',
         row_ratio: `${layout.dimension_table[0]?.total_rows > layout.dimension_table[1]?.total_rows ? Math.round(layout.dimension_table[0]?.total_rows / Math.max(layout.dimension_table[1]?.total_rows, 1)) : 1}:${layout.dimension_table[1]?.total_rows > layout.dimension_table[0]?.total_rows ? Math.round(layout.dimension_table[1]?.total_rows / Math.max(layout.dimension_table[0]?.total_rows, 1)) : 1}`,
         orientation: layout.orientation,
-        shape_type: newShape
+        shape_type: newShape,
+        lang: i18n.language
       });
       setLayout(updated);
       if (onLayoutUpdated) onLayoutUpdated(updated);
@@ -405,15 +406,20 @@ export const PlantingLayoutView: React.FC<PlantingLayoutViewProps> = ({
               </span>
               <div className="flex flex-wrap gap-2 text-[11px] font-medium text-stone-700">
                 <span className="px-2 py-1 bg-white rounded-md border border-stone-200">
-                  {isKn ? 'ಸಾಲು ೧ (ಮೊದಲ ಸಾಲು):' : 'Row 1:'} <b>{plantedRows[0].length_m} ಮೀ</b> ({plantedRows[0].plants_in_row} {isKn ? 'ಗಿಡಗಳು' : 'plants'})
+                  {isKn ? 'ಸಾಲು ೧ (ಮೊದಲ ಸಾಲು):' : isHi ? 'कतार १ (पहली):' : 'Row 1 (First row):'}{' '}
+                  <b>{plantedRows[0].length_m} {isKn ? 'ಮೀ' : isHi ? 'मी' : 'm'}</b>{' '}
+                  ({plantedRows[0].plants_in_row} {isKn ? 'ಗಿಡಗಳು' : isHi ? 'पौधे' : 'plants'})
                 </span>
                 {plantedRows.length > 5 && (
                   <span className="px-2 py-1 bg-white rounded-md border border-stone-200">
-                    {isKn ? `ಸಾಲು ${Math.floor(plantedRows.length / 2)} (ಮಧ್ಯ ಸಾಲು):` : `Row ${Math.floor(plantedRows.length / 2)}:`} <b>{plantedRows[Math.floor(plantedRows.length / 2)].length_m} ಮೀ</b>
+                    {isKn ? `ಸಾಲು ${Math.floor(plantedRows.length / 2)} (ಮಧ್ಯ ಸಾಲು):` : isHi ? `कतार ${Math.floor(plantedRows.length / 2)} (मध्य):` : `Row ${Math.floor(plantedRows.length / 2)} (Middle):`}{' '}
+                    <b>{plantedRows[Math.floor(plantedRows.length / 2)].length_m} {isKn ? 'ಮೀ' : isHi ? 'मी' : 'm'}</b>
                   </span>
                 )}
                 <span className="px-2 py-1 bg-white rounded-md border border-stone-200">
-                  {isKn ? `ಸಾಲು ${plantedRows.length} (ಕೊನೆಯ ಸಾಲು):` : `Row ${plantedRows.length}:`} <b>{plantedRows[plantedRows.length - 1].length_m} ಮೀ</b> ({plantedRows[plantedRows.length - 1].plants_in_row} {isKn ? 'ಗಿಡಗಳು' : 'plants'})
+                  {isKn ? `ಸಾಲು ${plantedRows.length} (ಕೊನೆಯ ಸಾಲು):` : isHi ? `कतार ${plantedRows.length} (अंतिम):` : `Row ${plantedRows.length} (Last row):`}{' '}
+                  <b>{plantedRows[plantedRows.length - 1].length_m} {isKn ? 'ಮೀ' : isHi ? 'मी' : 'm'}</b>{' '}
+                  ({plantedRows[plantedRows.length - 1].plants_in_row} {isKn ? 'ಗಿಡಗಳು' : isHi ? 'पौधे' : 'plants'})
                 </span>
               </div>
             </div>
@@ -421,10 +427,10 @@ export const PlantingLayoutView: React.FC<PlantingLayoutViewProps> = ({
 
           <div className="pt-2 flex flex-wrap items-center gap-4 text-xs text-stone-600">
             <span className="flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-emerald-600" /> {t('blueprint.border_rows')}: {layout.border_rows_count} {isKn && '(ವರಂಬಿನ ಸಾಲುಗಳು)'}
+              <Check className="w-4 h-4 text-emerald-600" /> {t('blueprint.border_rows')}: {layout.border_rows_count} {isKn ? '(ವರಂಬಿನ ಸಾಲುಗಳು)' : ''}
             </span>
             <span className="flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-emerald-600" /> {t('blueprint.pathways')}: {layout.pathways_count} ({layout.pathway_width_m}m {isKn ? 'ತಿರುಗಾಡುವ ಹಾದಿ' : 'pathway'})
+              <Check className="w-4 h-4 text-emerald-600" /> {t('blueprint.pathways')}: {layout.pathways_count} ({layout.pathway_width_m}m {isKn ? 'ತಿರುಗಾಡುವ ಹಾದಿ' : isHi ? 'रास्ता' : 'pathway'})
             </span>
           </div>
         </div>
@@ -433,18 +439,28 @@ export const PlantingLayoutView: React.FC<PlantingLayoutViewProps> = ({
         <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-xs space-y-4">
           <h4 className="text-sm font-bold text-stone-900">{t('blueprint.legend_title')}</h4>
           <div className="space-y-2.5">
-            {layout.legend.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-2.5 rounded-xl bg-stone-50 border border-stone-100">
-                <span
-                  className="w-5 h-5 rounded-md shrink-0 shadow-xs border border-white"
-                  style={{ backgroundColor: item.color }}
-                />
-                <div className="text-xs">
-                  <div className="font-semibold text-stone-900">{item.label}</div>
-                  <div className="text-[11px] text-stone-500">{item.type}</div>
+            {layout.legend.map((item, idx) => {
+              // Strip out any bracketed non-English scripts if in English mode
+              const cleanLabel = isKn
+                ? item.label
+                : item.label.replace(/\s*\([^)]*[\u0C80-\u0CFF\u0900-\u097F][^)]*\)/g, '');
+              const cleanType = isKn
+                ? item.type
+                : item.type.replace(/\s*\([^)]*[\u0C80-\u0CFF\u0900-\u097F][^)]*\)/g, '');
+
+              return (
+                <div key={idx} className="flex items-center gap-3 p-2.5 rounded-xl bg-stone-50 border border-stone-100">
+                  <span
+                    className="w-5 h-5 rounded-md shrink-0 shadow-xs border border-white"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <div className="text-xs">
+                    <div className="font-semibold text-stone-900">{cleanLabel}</div>
+                    <div className="text-[11px] text-stone-500">{cleanType}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 space-y-1">

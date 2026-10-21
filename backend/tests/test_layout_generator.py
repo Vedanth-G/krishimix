@@ -72,7 +72,22 @@ def test_layout_polygon_clipping_and_cut_row_lengths():
     assert res.shape_type == "Trapezoid"
     assert "field-boundary-clip" in res.svg_content
     assert "clip-path=\"url(#field-boundary-clip)\"" in res.svg_content
-    assert "ವರಂಬು / ಬದು" in res.svg_content
+    assert "Farm Bund / Ridge" in res.svg_content
+
+    # Also test Kannada localization
+    req_kn = LayoutGenerateRequest(
+        field_length_m=60.0,
+        field_breadth_m=40.0,
+        crop_a_name="Sorghum",
+        variety_a_name="M 35-1",
+        crop_b_name="Pigeonpea",
+        variety_b_name="TS-3R",
+        row_ratio="2:1",
+        shape_type="Trapezoid",
+        lang="kn"
+    )
+    res_kn = layout_generator.generate_layout(req_kn)
+    assert "ವರಂಬು / ಬದು" in res_kn.svg_content
     assert len(res.polygon_points) == 4
     # Top rows must be shorter than bottom rows in a trapezoid field
     assert res.min_row_length_m < res.max_row_length_m

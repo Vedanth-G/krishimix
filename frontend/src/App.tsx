@@ -116,6 +116,20 @@ export const App: React.FC = () => {
   // Language switch handler
   const handleLanguageChange = (lang: string) => {
     i18n.changeLanguage(lang);
+    if (layout && evaluation) {
+      generatePlantingLayout({
+        field_length_m: lengthM,
+        field_breadth_m: breadthM,
+        crop_a_name: evaluation.crop_a_summary.name,
+        variety_a_name: evaluation.crop_a_summary.variety,
+        crop_b_name: evaluation.crop_b_summary.name,
+        variety_b_name: evaluation.crop_b_summary.variety,
+        row_ratio: rowRatio,
+        orientation,
+        shape_type: shapeType,
+        lang
+      }).then(updated => setLayout(updated)).catch(() => {});
+    }
   };
 
   // Audio Read Aloud
@@ -190,7 +204,8 @@ export const App: React.FC = () => {
           variety_b_name: evalRes.crop_b_summary.variety,
           row_ratio: rowRatio,
           orientation,
-          shape_type: shapeType
+          shape_type: shapeType,
+          lang: i18n.language
         });
         setLayout(layoutRes);
 

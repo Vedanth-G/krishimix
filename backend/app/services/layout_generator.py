@@ -290,6 +290,8 @@ class LayoutGenerator:
         min_len = min((r.length_m for r in planted_rows), default=round(L - 2 * headland_margin_m, 1))
         max_len = max((r.length_m for r in planted_rows), default=round(L - 2 * headland_margin_m, 1))
 
+        lang = (req.lang or "en").lower()
+
         # Generate SVG string
         svg_content, viewbox, scale_factor = LayoutGenerator._render_svg(
             L=L,
@@ -297,15 +299,31 @@ class LayoutGenerator:
             poly_points=poly_points,
             rows=rows,
             req=req,
-            shape_type=shape_type
+            shape_type=shape_type,
+            lang=lang
         )
 
-        legend = [
-            {"label": f"{req.crop_a_name} ({req.variety_a_name})", "color": COLOR_CROP_A, "type": "Primary Crop (ಮುಖ್ಯ ಬೆಳೆ)"},
-            {"label": f"{req.crop_b_name} ({req.variety_b_name})", "color": COLOR_CROP_B, "type": "Intercrop Companion (ಜೋಡಿ ಬೆಳೆ)"},
-            {"label": "Farm Bund / Ridge (ವರಂಬು / ಬದು)", "color": COLOR_BUND, "type": "Boundary Protection"},
-            {"label": "Sprayer Track (ತಿರುಗಾಡುವ ಹಾದಿ)", "color": COLOR_PATHWAY, "type": "Access Alley"}
-        ]
+        if lang == "kn":
+            legend = [
+                {"label": f"{req.crop_a_name} ({req.variety_a_name})", "color": COLOR_CROP_A, "type": "ಮುಖ್ಯ ಬೆಳೆ"},
+                {"label": f"{req.crop_b_name} ({req.variety_b_name})", "color": COLOR_CROP_B, "type": "ಜೋಡಿ ಬೆಳೆ"},
+                {"label": "ಜಮೀನಿನ ಬದು", "color": COLOR_BUND, "type": "ಗಡಿ ಸಂರಕ್ಷಣೆ"},
+                {"label": "ತಿರುಗಾಡುವ ಹಾದಿ", "color": COLOR_PATHWAY, "type": "ಔಷಧ ಸಿಂಪರಣೆ ಕಾಲುದಾರಿ"}
+            ]
+        elif lang == "hi":
+            legend = [
+                {"label": f"{req.crop_a_name} ({req.variety_a_name})", "color": COLOR_CROP_A, "type": "मुख्य फसल"},
+                {"label": f"{req.crop_b_name} ({req.variety_b_name})", "color": COLOR_CROP_B, "type": "साथी फसल"},
+                {"label": "खेत की मेड़", "color": COLOR_BUND, "type": "सीमा सुरक्षा"},
+                {"label": "रास्ता", "color": COLOR_PATHWAY, "type": "छिड़काव रास्ता"}
+            ]
+        else:
+            legend = [
+                {"label": f"{req.crop_a_name} ({req.variety_a_name})", "color": COLOR_CROP_A, "type": "Primary Crop"},
+                {"label": f"{req.crop_b_name} ({req.variety_b_name})", "color": COLOR_CROP_B, "type": "Intercrop Companion"},
+                {"label": "Farm Bund / Ridge", "color": COLOR_BUND, "type": "Boundary Protection"},
+                {"label": "Farm Pathway / Sprayer Track", "color": COLOR_PATHWAY, "type": "Access Alley"}
+            ]
 
         return PlantingLayoutData(
             field_length_m=round(L, 1),
@@ -335,7 +353,8 @@ class LayoutGenerator:
         poly_points: List[Tuple[float, float]],
         rows: List[LayoutRowItem],
         req: LayoutGenerateRequest,
-        shape_type: str
+        shape_type: str,
+        lang: str = "en"
     ) -> Tuple[str, str, float]:
         """Renders farmer-friendly SVG markup conforming strictly to arbitrary field polygon."""
         margin_x = 70
@@ -402,6 +421,12 @@ class LayoutGenerator:
             fy = margin_y + (f_idx * furrow_step_px)
             lines.append(f'    <line x1="{margin_x - 10}" y1="{fy:.1f}" x2="{margin_x + field_w_px + 10}" y2="{fy:.1f}" stroke="#5c330a" stroke-width="1.2" opacity="0.45" />')
 
+        track_label = (
+            f"🚶 ಔಷಧ ಸಿಂಪರಣೆ ಹಾದಿ ({req.pathway_width_m}m)" if lang == "kn"
+            else f"🚶 छिड़काव रास्ता ({req.pathway_width_m}m)" if lang == "hi"
+            else f"🚶 Sprayer Track ({req.pathway_width_m}m)"
+        )
+
         # 3. Planting Rows and Pathways strictly inside clipped polygon
         for row in rows:
             ry = sy(row.y_offset_m)
@@ -414,7 +439,7 @@ class LayoutGenerator:
                 ph = max(4.0, row.width_m * scale * 0.7)
                 lines.append(f'    <rect x="{rx_start}" y="{ry - (ph / 2):.1f}" width="{row_len_px:.1f}" height="{ph:.1f}" fill="{row.color}" opacity="0.65" rx="2" />')
                 lines.append(f'    <line x1="{rx_start}" y1="{ry:.1f}" x2="{rx_end}" y2="{ry:.1f}" stroke="#d97706" stroke-dasharray="5,4" stroke-width="1.2" />')
-                lines.append(f'    <text x="{(rx_start + rx_end) / 2:.1f}" y="{ry + 3.5:.1f}" font-size="10" font-family="sans-serif" font-weight="700" fill="#78350f" text-anchor="middle">🚶 ಹಾದಿ / Sprayer Track ({req.pathway_width_m}m)</text>')
+                lines.append(f'    <text x="{(rx_start + rx_end) / 2:.1f}" y="{ry + 3.5:.1f}" font-size="10" font-family="sans-serif" font-weight="700" fill="#78350f" text-anchor="middle">{track_label}</text>')
 
             elif row.crop_key == "BORDER":
                 # Outer perimeter trap / border row
@@ -460,25 +485,49 @@ class LayoutGenerator:
         p_sec = poly_points[1] if len(poly_points) > 1 else (L, 0)
         bund_label_x = sx((p_first[0] + p_sec[0]) / 2.0)
         bund_label_y = sy((p_first[1] + p_sec[1]) / 2.0) - 8
-        lines.append(f'    <text x="{bund_label_x:.1f}" y="{bund_label_y:.1f}" font-size="10" font-family="sans-serif" font-weight="700" fill="#78350f" text-anchor="middle">ವರಂಬು / ಬದು (Farm Bund) 📍</text>')
+
+        bund_badge = (
+            "ವರಂಬು / ಬದು 📍" if lang == "kn"
+            else "खेत की मेड़ 📍" if lang == "hi"
+            else "Farm Bund / Ridge 📍"
+        )
+        lines.append(f'    <text x="{bund_label_x:.1f}" y="{bund_label_y:.1f}" font-size="10" font-family="sans-serif" font-weight="700" fill="#78350f" text-anchor="middle">{bund_badge}</text>')
 
         # 5. Farmer-Centric Measurement Brackets (no scientific Cartesian ticks)
         # Top bracket: Field Length
         bracket_y = margin_y - 20
         lines.append(f'  <path d="M {margin_x} {bracket_y + 6} L {margin_x} {bracket_y} L {margin_x + field_w_px} {bracket_y} L {margin_x + field_w_px} {bracket_y + 6}" fill="none" stroke="#451a03" stroke-width="2" />')
-        lines.append(f'  <text x="{margin_x + (field_w_px / 2):.1f}" y="{bracket_y - 6:.1f}" font-size="12" font-family="sans-serif" font-weight="800" fill="#451a03" text-anchor="middle">ಉದ್ದ: {L:.1f} ಮೀ (Length: {L:.1f}m) • {req.orientation}</text>')
+
+        len_text = (
+            f"ಉದ್ದ: {L:.1f} ಮೀ • {req.orientation}" if lang == "kn"
+            else f"लंबाई: {L:.1f} मी • {req.orientation}" if lang == "hi"
+            else f"Length: {L:.1f} m • {req.orientation}"
+        )
+        lines.append(f'  <text x="{margin_x + (field_w_px / 2):.1f}" y="{bracket_y - 6:.1f}" font-size="12" font-family="sans-serif" font-weight="800" fill="#451a03" text-anchor="middle">{len_text}</text>')
 
         # Right bracket: Field Breadth
         bracket_x = margin_x + field_w_px + 20
         lines.append(f'  <path d="M {bracket_x - 6} {margin_y} L {bracket_x} {margin_y} L {bracket_x} {margin_y + field_h_px} L {bracket_x - 6} {margin_y + field_h_px}" fill="none" stroke="#451a03" stroke-width="2" />')
-        lines.append(f'  <text x="{bracket_x + 16:.1f}" y="{margin_y + (field_h_px / 2):.1f}" font-size="12" font-family="sans-serif" font-weight="800" fill="#451a03" text-anchor="middle" transform="rotate(90, {bracket_x + 16:.1f}, {margin_y + (field_h_px / 2):.1f})">ಅಗಲ: {W:.1f} ಮೀ (Breadth: {W:.1f}m)</text>')
+
+        wid_text = (
+            f"ಅಗಲ: {W:.1f} ಮೀ" if lang == "kn"
+            else f"चौड़ाई: {W:.1f} मी" if lang == "hi"
+            else f"Breadth: {W:.1f} m"
+        )
+        lines.append(f'  <text x="{bracket_x + 16:.1f}" y="{margin_y + (field_h_px / 2):.1f}" font-size="12" font-family="sans-serif" font-weight="800" fill="#451a03" text-anchor="middle" transform="rotate(90, {bracket_x + 16:.1f}, {margin_y + (field_h_px / 2):.1f})">{wid_text}</text>')
 
         # 6. Rural Compass Indicator (Top-Right)
         comp_cx = margin_x + field_w_px - 26
         comp_cy = margin_y + 26
+        comp_text = "ಉತ್ತರ (N)" if lang == "kn" else "उत्तर (N)" if lang == "hi" else "North (N)"
+
         lines.append(f'  <circle cx="{comp_cx}" cy="{comp_cy}" r="17" fill="#ffffff" stroke="#15803d" stroke-width="1.8" opacity="0.95" />')
         lines.append(f'  <polygon points="{comp_cx},{comp_cy - 12} {comp_cx - 4.5},{comp_cy + 8} {comp_cx},{comp_cy + 3} {comp_cx + 4.5},{comp_cy + 8}" fill="#15803d" />')
-        lines.append(f'  <text x="{comp_cx}" y="{comp_cy - 14}" font-size="9" font-family="sans-serif" font-weight="bold" fill="#15803d" text-anchor="middle">ಉತ್ತರ (N)</text>')
+        lines.append(f'  <text x="{comp_cx}" y="{comp_cy - 14}" font-size="9" font-family="sans-serif" font-weight="bold" fill="#15803d" text-anchor="middle">{comp_text}</text>')
+
+        # Close SVG
+        lines.append('</svg>')
+        return "\n".join(lines), viewbox, round(scale, 2)
 
         # Close SVG
         lines.append('</svg>')
