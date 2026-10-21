@@ -1,0 +1,76 @@
+{
+  "app": {
+    "title": "KrishiMix",
+    "subtitle": "Smallholder Intercropping & Planting Layout System",
+    "tagline": "Science-backed variety pairing for higher land productivity"
+  },
+  "nav": {
+    "wizard": "Plan Farm",
+    "compare": "Compare",
+    "saved": "Saved Plans",
+    "admin": "Admin / Trials",
+    "read_aloud": "Read Aloud",
+    "stop_reading": "Stop Audio",
+    "voice_input": "Voice Search"
+  },
+  "wizard": {
+    "step": "Step {{current}} of {{total}}",
+    "step1_title": "Location & Season",
+    "step1_desc": "Where and when will you sow?",
+    "step2_title": "Land Size & Shape",
+    "step2_desc": "Specify your field dimensions",
+    "step3_title": "Soil & Irrigation",
+    "step3_desc": "Your soil condition and water supply",
+    "step4_title": "Choose Crops & Varieties",
+    "step4_desc": "Select pairing or let KrishiMix suggest",
+    "step5_title": "Decision & Layout",
+    "step5_desc": "Evidence-backed layout and resource plan",
+    "next": "Continue",
+    "back": "Back",
+    "suggest_for_me": "Suggest for Me",
+    "evaluate_now": "Evaluate Intercropping Plan"
+  },
+  "evidence": {
+    "observed": "OBSERVED",
+    "observed_desc": "Verified in published agricultural university trials",
+    "predicted": "MODEL-PREDICTED",
+    "predicted_desc": "Algorithmic regression with 95% Confidence Interval",
+    "unsupported": "UNSUPPORTED",
+    "unsupported_desc": "Agronomic rules violated. Incompatible pairing.",
+    "legend_title": "Evidence Transparency Guide",
+    "rule_transparency": "Never Present Predictions as Observations"
+  },
+  "crops": {
+    "primary_crop": "Primary Crop (Row A)",
+    "companion_crop": "Companion Crop (Row B)",
+    "select_variety": "Select Seed Variety",
+    "row_ratio": "Planting Row Proportion",
+    "duration": "Maturity",
+    "height": "Height",
+    "canopy": "Canopy",
+    "root": "Root Horizon"
+  },
+  "results": {
+    "verdict_title": "Agronomic Verdict",
+    "ler_metric": "Land Equivalent Ratio (LER)",
+    "ler_meaning": "Land use efficiency compared to monoculture",
+    "gross_return": "Estimated Gross Revenue",
+    "net_return": "Estimated Net Profit",
+    "water_need": "Estimated Irrigation Need",
+    "labour_days": "Operational Labour",
+    "risk_level": "Biological Risk",
+    "tab_layout": "Planting Layout",
+    "tab_resources": "Input & Seed Costs",
+    "tab_checks": "Agronomic Checks",
+    "tab_explain": "Why This Result?",
+    "export_pdf": "Export PDF Summary",
+    "export_png": "Save Layout Image",
+    "save_plan": "Save Plan to Device"
+  },
+  "unsupported": {
+    "heading": "This Combination Cannot Be Recommended",
+    "reasons_title": "Identified Agronomic Conflicts",
+    "alternatives_title": "Recommended Supported Alternatives",
+    "switch_btn": "Switch to This Alternative"
+  }
+}

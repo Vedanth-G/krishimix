@@ -1,0 +1,53 @@
+{
+  "rules_version": "1.0.0",
+  "rules_description": "Agronomic validation constraints for intercropping systems based on ICAR and state agricultural university guidelines.",
+  "maturity_gap": {
+    "max_allowed_days": 90,
+    "warning_threshold_days": 45,
+    "optimal_range_days": [20, 45],
+    "fail_reason": "Maturity gap is too large ({maturity_gap} days). One crop will mature long before the other, causing severe harvest damage or premature abandonment of the field.",
+    "warning_reason": "Maturity gap is {maturity_gap} days. Synchronized spraying and harvesting operations will require extra care."
+  },
+  "canopy_shading": {
+    "incompatible_pairs": [
+      {
+        "dominant_canopy": "Dense",
+        "suppressed_canopy": "Spreading",
+        "height_diff_threshold_cm": 110,
+        "fail_reason": "Severe shading conflict: {crop_a} ({height_a} cm, {canopy_a}) will smother {crop_b} ({height_b} cm, {canopy_b}), denying photosynthetic radiation to the lower canopy."
+      },
+      {
+        "dominant_canopy": "Erect",
+        "suppressed_canopy": "Erect",
+        "height_diff_threshold_cm": 150,
+        "fail_reason": "Excessive height disparity ({height_diff} cm) will create asymmetric solar competition between companion varieties."
+      }
+    ],
+    "allowed_combinations": [
+      {"tall": "Erect", "companion": "Spreading"},
+      {"tall": "Erect", "companion": "Semi-erect"},
+      {"tall": "Erect", "companion": "Bushy"},
+      {"tall": "Semi-spreading", "companion": "Erect"}
+    ]
+  },
+  "root_system_competition": {
+    "conflict_rule": "Identical root architecture at the same shallow depth induces severe below-ground competition for moisture and phosphate.",
+    "ideal_pairing": "Complementary root zones (e.g., Fibrous shallow with Taproot deep)."
+  },
+  "water_requirement": {
+    "incompatible_levels": [
+      {"level_a": "High", "level_b": "Low", "fail_reason": "Incompatible water needs: {crop_a} requires high irrigation, which will cause root rot or waterlogging stress in {crop_b}."}
+    ],
+    "warning_levels": [
+      {"level_a": "High", "level_b": "Medium", "warning_reason": "Moderate water differential; careful furrow scheduling recommended."}
+    ]
+  },
+  "soil_ph": {
+    "min_overlap_tolerance": 0.4,
+    "fail_reason": "Soil pH ranges do not overlap. {crop_a} requires pH {ph_min_a}-{ph_max_a} while {crop_b} requires pH {ph_min_b}-{ph_max_b}."
+  },
+  "nutrient_synergy": {
+    "cereal_legume_bonus": 0.12,
+    "description": "Legume biological nitrogen fixation benefits companion cereals and post-harvest soil microbial health."
+  }
+}

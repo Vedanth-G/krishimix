@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: krishimix-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PROJECT_NAME=KrishiMix
+      - DATABASE_URL=sqlite:///./krishimix.db
+      - RATE_LIMIT_PER_MINUTE=120
+    volumes:
+      - backend-db:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: krishimix-frontend
+    ports:
+      - "80:80"
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  backend-db:
