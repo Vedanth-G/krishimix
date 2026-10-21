@@ -57,6 +57,7 @@ export async function generatePlantingLayout(params: {
   plant_spacing_b_cm?: number;
   include_border?: boolean;
   orientation?: string;
+  shape_type?: string;
 }): Promise<PlantingLayoutData> {
   const res = await fetch(`${API_BASE}/layout/generate`, {
     method: 'POST',

@@ -189,7 +189,8 @@ export const App: React.FC = () => {
           crop_b_name: evalRes.crop_b_summary.name,
           variety_b_name: evalRes.crop_b_summary.variety,
           row_ratio: rowRatio,
-          orientation
+          orientation,
+          shape_type: shapeType
         });
         setLayout(layoutRes);
 

@@ -1,34 +1,81 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlternativeSuggestion } from '../../types';
-import { AlertTriangle, ArrowRight, ShieldAlert, Sparkles, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, ArrowRight, ShieldAlert, Sparkles, Volume2, VolumeX } from 'lucide-react';
+import { speechHelper, buildRuralIncompatibleScript } from '../../utils/speech';
 
 interface UnsupportedHandlerProps {
   reasons: string[];
   alternatives: AlternativeSuggestion[];
   onSelectAlternative: (alt: AlternativeSuggestion) => void;
+  cropAName?: string;
+  cropBName?: string;
 }
 
 export const UnsupportedHandler: React.FC<UnsupportedHandlerProps> = ({
   reasons,
   alternatives,
-  onSelectAlternative
+  onSelectAlternative,
+  cropAName = 'Crop A',
+  cropBName = 'Crop B'
 }) => {
+  const { t, i18n } = useTranslation();
+  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
+
+  const handleSpeakWarning = () => {
+    if (isSpeaking) {
+      speechHelper.stop();
+      setIsSpeaking(false);
+    } else {
+      const primaryReason = reasons.length > 0 ? reasons[0] : 'ಅನುಪಯುಕ್ತ ಹೊಂದಾಣಿಕೆ';
+      const warningText = buildRuralIncompatibleScript(cropAName, cropBName, primaryReason, i18n.language);
+      setIsSpeaking(true);
+      speechHelper.speak(warningText, i18n.language, () => setIsSpeaking(false));
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       {/* Red Alert Banner */}
       <div className="p-6 rounded-2xl bg-rose-50 border-2 border-rose-300 shadow-sm text-rose-950 space-y-3">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-rose-600 text-white rounded-xl shadow-xs">
-            <ShieldAlert className="w-6 h-6" />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-rose-600 text-white rounded-xl shadow-xs">
+              <ShieldAlert className="w-6 h-6" />
+            </div>
+            <div>
+              <span className="text-xs font-black uppercase tracking-wider text-rose-700 bg-rose-200 px-2 py-0.5 rounded-full">
+                UNSUPPORTED COMBINATION
+              </span>
+              <h3 className="text-lg font-black text-rose-950 mt-1">
+                Agronomic Conflict: This Crop Combination Cannot Be Recommended
+              </h3>
+            </div>
           </div>
-          <div>
-            <span className="text-xs font-black uppercase tracking-wider text-rose-700 bg-rose-200 px-2 py-0.5 rounded-full">
-              UNSUPPORTED COMBINATION
-            </span>
-            <h3 className="text-lg font-black text-rose-950 mt-1">
-              Agronomic Conflict: This Crop Combination Cannot Be Recommended
-            </h3>
-          </div>
+
+          {/* Audio Warning Button */}
+          <button
+            type="button"
+            onClick={handleSpeakWarning}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition active:scale-95 ${
+              isSpeaking
+                ? 'bg-rose-700 text-white animate-pulse'
+                : 'bg-white hover:bg-rose-100 text-rose-800 border border-rose-300'
+            }`}
+            title="Listen to incompatibility advisory"
+          >
+            {isSpeaking ? (
+              <>
+                <VolumeX className="w-4 h-4" />
+                <span>ನಿಲ್ಲಿಸಿ (Stop)</span>
+              </>
+            ) : (
+              <>
+                <Volume2 className="w-4 h-4 text-rose-700" />
+                <span>🔊 ಎಚ್ಚರಿಕೆ ಕೇಳಿ (Listen)</span>
+              </>
+            )}
+          </button>
         </div>
 
         <p className="text-xs text-rose-900 leading-relaxed font-medium">

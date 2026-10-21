@@ -53,3 +53,30 @@ def test_layout_dimension_table_consistency():
     assert total_table_plants == total_row_plants
     assert "<svg" in res.svg_content
     assert "</svg>" in res.svg_content
+    assert "field-boundary-clip" in res.svg_content
+
+def test_layout_polygon_clipping_and_cut_row_lengths():
+    """Verify that trapezoid shape generates tapered rows conforming to boundary polygon."""
+    req = LayoutGenerateRequest(
+        field_length_m=60.0,
+        field_breadth_m=40.0,
+        crop_a_name="Sorghum",
+        variety_a_name="M 35-1",
+        crop_b_name="Pigeonpea",
+        variety_b_name="TS-3R",
+        row_ratio="2:1",
+        shape_type="Trapezoid"
+    )
+    res = layout_generator.generate_layout(req)
+
+    assert res.shape_type == "Trapezoid"
+    assert "field-boundary-clip" in res.svg_content
+    assert "clip-path=\"url(#field-boundary-clip)\"" in res.svg_content
+    assert "ವರಂಬು / ಬದು" in res.svg_content
+    assert len(res.polygon_points) == 4
+    # Top rows must be shorter than bottom rows in a trapezoid field
+    assert res.min_row_length_m < res.max_row_length_m
+    first_planted = [r for r in res.rows if r.crop_key in ("A", "B")][0]
+    last_planted = [r for r in res.rows if r.crop_key in ("A", "B")][-1]
+    assert first_planted.length_m < last_planted.length_m
+

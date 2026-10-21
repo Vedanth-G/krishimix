@@ -1,24 +1,17 @@
 """
-Deterministic To-Scale SVG Layout Generator for Intercropped Fields.
+Deterministic To-Scale SVG Layout Generator for Intercropped Fields with
+Dynamic Boundary Polygon Clipping and Farmer-Centric Visuals.
 
-Spacing Maths:
---------------
-Let:
-  - L = Field Length (meters, parallel to crop rows)
-  - W = Field Breadth (meters, perpendicular to rows)
-  - r_spacing_A = Inter-row spacing for Crop A (m)
-  - r_spacing_B = Inter-row spacing for Crop B (m)
-  - p_spacing_A = Intra-row plant-to-plant spacing for Crop A (m)
-  - p_spacing_B = Intra-row plant-to-plant spacing for Crop B (m)
-  - B_count = Number of border rows (outer perimeter buffer)
-  - P_width = Pathway width (m) inserted every P_freq rows for operational transit
-
-Row Allocation:
-  - Rows are laid sequentially along the breadth dimension W.
-  - At each step, row_y is incremented by row_spacing.
-  - Pathway is inserted when (row_counter % P_freq == 0).
-  - Invariant: row_y + row_spacing <= W ensures no row ever exceeds physical field boundaries.
-  - Plants per row = floor((L - 2 * headland_margin) / plant_spacing)
+Features:
+1. Dynamic Polygon Conformation: Crop rows and furrows strictly conform to
+   arbitrary field polygons (Regular, Trapezoid, Contour, Custom Boundary).
+2. Line-Polygon Intersection: Calculates true cut row lengths (x_start, x_end)
+   for tapering or irregular boundaries, ensuring realistic plant populations.
+3. Farmer-Centric Top-Down Map: Warm plowed soil texture, green cereal lines
+   with leaf glyphs, amber dashed legume lines with blossom dots, light earthen
+   walking tracks, and traditional dashed bund (ವರಂಬು / ಬದು).
+4. Measurement Brackets: Clean rustic dimension brackets (ಉದ್ದ, ಅಗಲ) without
+   abstract Cartesian grid ticks or scientific coordinate axes.
 """
 
 from typing import List, Dict, Any, Tuple
@@ -30,14 +23,80 @@ from app.schemas.layout import (
     LayoutGenerateRequest
 )
 
-COLOR_CROP_A = "#15803d"      # Green 700 (Tall / Main Cereal)
-COLOR_CROP_B = "#d97706"      # Amber 600 (Pulse / Legume)
-COLOR_BORDER = "#166534"      # Deep Forest Green (Trap crop / border)
-COLOR_PATHWAY = "#e2e8f0"     # Slate 200 (Pathway)
-COLOR_FIELD_BG = "#fefce8"    # Soft fertile soil tint / ivory
+COLOR_CROP_A = "#16a34a"      # Emerald Green 600 (Main Cereal)
+COLOR_CROP_B = "#d97706"      # Amber Gold 600 (Pulse / Legume)
+COLOR_BORDER = "#15803d"      # Deep Forest Green (Trap crop / border)
+COLOR_PATHWAY = "#fef3c7"     # Light Earthen Track (Sprayer / Walking Path)
+COLOR_SOIL = "#78350f"        # Warm agricultural plowed soil
+COLOR_BUND = "#451a03"        # Deep earthen field bund / ridge
 
 class LayoutGenerator:
     """Generates precise, deterministic SVG planting layouts with boundary validation."""
+
+    @staticmethod
+    def _get_shape_polygon(shape_type: str, L: float, W: float) -> List[Tuple[float, float]]:
+        """Returns meter-space vertices [(x, y)] of the field boundary polygon."""
+        st = (shape_type or "Regular").lower()
+        if "trap" in st:
+            # Trapezoid: narrower top (70% width), full width at bottom base
+            return [
+                (0.15 * L, 0.0),
+                (0.85 * L, 0.0),
+                (L, W),
+                (0.0, W)
+            ]
+        elif "contour" in st:
+            # Smooth curved slope / terrace contour polygon
+            return [
+                (0.06 * L, 0.08 * W),
+                (0.35 * L, 0.01 * W),
+                (0.70 * L, 0.04 * W),
+                (0.94 * L, 0.14 * W),
+                (0.98 * L, 0.52 * W),
+                (0.92 * L, 0.88 * W),
+                (0.60 * L, 0.98 * W),
+                (0.15 * L, 0.94 * W),
+                (0.02 * L, 0.56 * W)
+            ]
+        elif "custom" in st:
+            # Irregular field boundary sketch
+            return [
+                (0.10 * L, 0.06 * W),
+                (0.50 * L, 0.02 * W),
+                (0.92 * L, 0.15 * W),
+                (0.98 * L, 0.65 * W),
+                (0.80 * L, 0.96 * W),
+                (0.20 * L, 0.90 * W),
+                (0.03 * L, 0.48 * W)
+            ]
+        else:
+            # Regular rectangular parcel
+            return [
+                (0.0, 0.0),
+                (L, 0.0),
+                (L, W),
+                (0.0, W)
+            ]
+
+    @staticmethod
+    def _intersect_horizontal_line(poly: List[Tuple[float, float]], y: float) -> Tuple[float, float]:
+        """Calculates min and max x intercepts where horizontal row y crosses the boundary edges."""
+        x_intercepts: List[float] = []
+        n = len(poly)
+        for i in range(n):
+            p1 = poly[i]
+            p2 = poly[(i + 1) % n]
+            x1, y1 = p1
+            x2, y2 = p2
+            if (y1 <= y <= y2) or (y2 <= y <= y1):
+                if abs(y2 - y1) > 1e-6:
+                    t = (y - y1) / (y2 - y1)
+                    x_intercepts.append(x1 + t * (x2 - x1))
+                elif abs(y - y1) < 1e-6:
+                    x_intercepts.extend([x1, x2])
+        if len(x_intercepts) >= 2:
+            return min(x_intercepts), max(x_intercepts)
+        return 0.0, 0.0
 
     @staticmethod
     def generate_layout(req: LayoutGenerateRequest) -> PlantingLayoutData:
@@ -47,6 +106,9 @@ class LayoutGenerator:
         """
         L = float(req.field_length_m)
         W = float(req.field_breadth_m)
+        shape_type = req.shape_type or "Regular"
+
+        poly_points = LayoutGenerator._get_shape_polygon(shape_type, L, W)
 
         # Spacing in meters
         r_spacing_a_m = max(0.2, req.row_spacing_a_cm / 100.0)
@@ -65,9 +127,8 @@ class LayoutGenerator:
         pattern: List[str] = (["A"] * ratio_a) + (["B"] * ratio_b)
         pattern_len = len(pattern)
 
-        # Margin/headland for tractor turning or walking at row ends
-        headland_margin_m = min(1.0, L * 0.02)
-        effective_row_length_m = max(1.0, L - (2 * headland_margin_m))
+        # Headland margin for tractor turning / walking near bund
+        headland_margin_m = min(1.0, max(0.5, L * 0.02))
 
         rows: List[LayoutRowItem] = []
         warnings: List[str] = []
@@ -82,7 +143,12 @@ class LayoutGenerator:
         if req.include_border:
             border_spacing = min(r_spacing_a_m, r_spacing_b_m)
             if current_y_m + border_spacing <= W:
-                plants = int(math.floor(effective_row_length_m / p_spacing_a_m))
+                x_min, x_max = LayoutGenerator._intersect_horizontal_line(poly_points, current_y_m)
+                x_start = x_min + headland_margin_m
+                x_end = x_max - headland_margin_m
+                cut_length = max(1.0, x_end - x_start)
+                plants = int(math.floor(cut_length / p_spacing_a_m))
+
                 rows.append(LayoutRowItem(
                     row_number=row_idx,
                     crop_name=f"{req.crop_a_name} (Border)",
@@ -91,9 +157,11 @@ class LayoutGenerator:
                     color=COLOR_BORDER,
                     y_offset_m=round(current_y_m, 2),
                     width_m=border_spacing,
-                    length_m=round(effective_row_length_m, 2),
+                    length_m=round(cut_length, 2),
                     plants_in_row=plants,
-                    plant_spacing_m=p_spacing_a_m
+                    plant_spacing_m=p_spacing_a_m,
+                    start_x_m=round(x_start, 2),
+                    end_x_m=round(x_end, 2)
                 ))
                 current_y_m += border_spacing
                 row_idx += 1
@@ -105,6 +173,11 @@ class LayoutGenerator:
             # Check if pathway needed
             if crop_row_counter > 0 and (crop_row_counter % req.pathway_frequency_rows == 0):
                 if current_y_m + req.pathway_width_m <= W:
+                    x_min, x_max = LayoutGenerator._intersect_horizontal_line(poly_points, current_y_m)
+                    x_start = x_min
+                    x_end = x_max
+                    cut_length = max(1.0, x_end - x_start)
+
                     rows.append(LayoutRowItem(
                         row_number=row_idx,
                         crop_name="Access Pathway",
@@ -113,9 +186,11 @@ class LayoutGenerator:
                         color=COLOR_PATHWAY,
                         y_offset_m=round(current_y_m, 2),
                         width_m=req.pathway_width_m,
-                        length_m=round(effective_row_length_m, 2),
+                        length_m=round(cut_length, 2),
                         plants_in_row=0,
-                        plant_spacing_m=0.0
+                        plant_spacing_m=0.0,
+                        start_x_m=round(x_start, 2),
+                        end_x_m=round(x_end, 2)
                     ))
                     current_y_m += req.pathway_width_m
                     row_idx += 1
@@ -139,28 +214,36 @@ class LayoutGenerator:
                 spacing_p = p_spacing_b_m
 
             # Strict boundary check: DO NOT EXCEED W
-            if current_y_m + spacing_r > (W - 0.3):
-                # Cannot fit another full row safely inside field boundary
+            if current_y_m + spacing_r > (W - 0.2):
                 break
 
-            plants = int(math.floor(effective_row_length_m / spacing_p))
-            rows.append(LayoutRowItem(
-                row_number=row_idx,
-                crop_name=c_name,
-                variety_name=v_name,
-                crop_key=crop_key,
-                color=c_color,
-                y_offset_m=round(current_y_m, 2),
-                width_m=spacing_r,
-                length_m=round(effective_row_length_m, 2),
-                plants_in_row=plants,
-                plant_spacing_m=spacing_p
-            ))
+            # Calculate real intersection of horizontal row against field boundary polygon
+            x_min, x_max = LayoutGenerator._intersect_horizontal_line(poly_points, current_y_m)
+            x_start = x_min + headland_margin_m
+            x_end = x_max - headland_margin_m
+            cut_length = max(0.5, x_end - x_start)
+
+            if cut_length >= 2.0:  # Only plant if enough room to sow
+                plants = int(math.floor(cut_length / spacing_p))
+                rows.append(LayoutRowItem(
+                    row_number=row_idx,
+                    crop_name=c_name,
+                    variety_name=v_name,
+                    crop_key=crop_key,
+                    color=c_color,
+                    y_offset_m=round(current_y_m, 2),
+                    width_m=spacing_r,
+                    length_m=round(cut_length, 2),
+                    plants_in_row=plants,
+                    plant_spacing_m=spacing_p,
+                    start_x_m=round(x_start, 2),
+                    end_x_m=round(x_end, 2)
+                ))
+                row_idx += 1
+                pattern_idx += 1
+                crop_row_counter += 1
 
             current_y_m += spacing_r
-            row_idx += 1
-            pattern_idx += 1
-            crop_row_counter += 1
 
         # Calculate Dimension Table stats
         rows_a = [r for r in rows if r.crop_key == "A"]
@@ -172,10 +255,9 @@ class LayoutGenerator:
         total_plants_b = sum(r.plants_in_row for r in rows_b)
         total_plants_border = sum(r.plants_in_row for r in rows_border)
 
-        plants_per_row_a = rows_a[0].plants_in_row if rows_a else 0
-        plants_per_row_b = rows_b[0].plants_in_row if rows_b else 0
+        plants_per_row_a = int(round(total_plants_a / max(len(rows_a), 1))) if rows_a else 0
+        plants_per_row_b = int(round(total_plants_b / max(len(rows_b), 1))) if rows_b else 0
 
-        total_area_planted = max(0.1, L * W)
         area_pct_a = round(((len(rows_a) + len(rows_border)) / max(total_plant_rows, 1)) * 100, 1)
         area_pct_b = round((len(rows_b) / max(total_plant_rows, 1)) * 100, 1)
 
@@ -204,21 +286,25 @@ class LayoutGenerator:
             )
         ]
 
+        planted_rows = [r for r in rows if r.crop_key in ("A", "B", "BORDER")]
+        min_len = min((r.length_m for r in planted_rows), default=round(L - 2 * headland_margin_m, 1))
+        max_len = max((r.length_m for r in planted_rows), default=round(L - 2 * headland_margin_m, 1))
+
         # Generate SVG string
         svg_content, viewbox, scale_factor = LayoutGenerator._render_svg(
             L=L,
             W=W,
+            poly_points=poly_points,
             rows=rows,
             req=req,
-            headland_margin_m=headland_margin_m,
-            effective_length_m=effective_row_length_m
+            shape_type=shape_type
         )
 
         legend = [
-            {"label": f"{req.crop_a_name} ({req.variety_a_name})", "color": COLOR_CROP_A, "type": "Primary Crop"},
-            {"label": f"{req.crop_b_name} ({req.variety_b_name})", "color": COLOR_CROP_B, "type": "Intercrop Companion"},
-            {"label": "Border / Trap Rows", "color": COLOR_BORDER, "type": "Border Protection"},
-            {"label": "Farm Pathway / Sprayer Track", "color": COLOR_PATHWAY, "type": "Access"}
+            {"label": f"{req.crop_a_name} ({req.variety_a_name})", "color": COLOR_CROP_A, "type": "Primary Crop (ಮುಖ್ಯ ಬೆಳೆ)"},
+            {"label": f"{req.crop_b_name} ({req.variety_b_name})", "color": COLOR_CROP_B, "type": "Intercrop Companion (ಜೋಡಿ ಬೆಳೆ)"},
+            {"label": "Farm Bund / Ridge (ವರಂಬು / ಬದು)", "color": COLOR_BUND, "type": "Boundary Protection"},
+            {"label": "Sprayer Track (ತಿರುಗಾಡುವ ಹಾದಿ)", "color": COLOR_PATHWAY, "type": "Access Alley"}
         ]
 
         return PlantingLayoutData(
@@ -235,107 +321,158 @@ class LayoutGenerator:
             pathway_width_m=req.pathway_width_m,
             legend=legend,
             orientation=req.orientation,
-            warnings=warnings
+            warnings=warnings,
+            shape_type=shape_type,
+            polygon_points=[[round(p[0], 2), round(p[1], 2)] for p in poly_points],
+            min_row_length_m=round(min_len, 1),
+            max_row_length_m=round(max_len, 1)
         )
 
     @staticmethod
     def _render_svg(
         L: float,
         W: float,
+        poly_points: List[Tuple[float, float]],
         rows: List[LayoutRowItem],
         req: LayoutGenerateRequest,
-        headland_margin_m: float,
-        effective_length_m: float
+        shape_type: str
     ) -> Tuple[str, str, float]:
-        """Renders responsive, cleanly dimensioned SVG markup."""
-        # Canvas sizing
-        margin = 60
+        """Renders farmer-friendly SVG markup conforming strictly to arbitrary field polygon."""
+        margin_x = 70
+        margin_y = 65
         target_width = 860
-        scale = (target_width - (2 * margin)) / max(L, 1.0)
+        scale = (target_width - (2 * margin_x)) / max(L, 1.0)
         svg_w = target_width
-        svg_h = int((W * scale) + (2 * margin))
+        svg_h = int((W * scale) + (2 * margin_y))
 
         viewbox = f"0 0 {svg_w} {svg_h}"
 
+        # Function to map meter (x, y) to svg pixel coords
+        def sx(x_m: float) -> float:
+            return margin_x + (x_m * scale)
+
+        def sy(y_m: float) -> float:
+            return margin_y + (y_m * scale)
+
+        # Polygon points string for SVG
+        poly_svg_str = " ".join(f"{sx(p[0]):.1f},{sy(p[1]):.1f}" for p in poly_points)
+
         lines: List[str] = [
-            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{viewbox}" width="100%" height="auto" class="krishimix-layout-svg rounded-lg border border-emerald-200 shadow-inner bg-[#fafaf9]">'
+            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{viewbox}" width="100%" height="auto" class="krishimix-layout-svg rounded-2xl border border-stone-300 shadow-md bg-[#faf8f5]">'
         ]
 
-        # Definitions (grid pattern, drop shadow)
-        lines.append("""
+        # Definitions: Dynamic clip path for boundary polygon & glyphs
+        lines.append(f"""
         <defs>
-          <pattern id="soilGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e7e5e4" stroke-width="0.75" />
-          </pattern>
-          <filter id="rowGlow" x="-10%" y="-10%" width="120%" height="120%">
-            <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#000000" flood-opacity="0.1" />
+          <!-- Dynamic SVG Field Boundary Clip -->
+          <clipPath id="field-boundary-clip">
+            <polygon points="{poly_svg_str}" />
+          </clipPath>
+
+          <!-- Drop Shadow for Bund -->
+          <filter id="bundShadow" x="-5%" y="-5%" width="110%" height="110%">
+            <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#451a03" flood-opacity="0.35" />
           </filter>
+
+          <!-- Leaf glyph for Primary Cereal (Crop A) -->
+          <g id="cropLeafGlyph">
+            <path d="M 0,0 C -3,-5 0,-8 3,-4 C 5,-1 3,2 0,0 Z" fill="#22c55e" stroke="#15803d" stroke-width="0.5" />
+          </g>
+
+          <!-- Blossom glyph for Secondary Legume (Crop B) -->
+          <g id="cropBlossomGlyph">
+            <circle cx="0" cy="0" r="2.2" fill="#fde047" stroke="#ca8a04" stroke-width="0.5" />
+            <circle cx="0" cy="0" r="0.9" fill="#ea580c" />
+          </g>
         </defs>
         """)
 
-        # Field Background
-        field_x = margin
-        field_y = margin
-        field_w = L * scale
-        field_h = W * scale
+        # GROUP CLIPPED TO ACTUAL FIELD BOUNDARY POLYGON
+        lines.append('  <g clip-path="url(#field-boundary-clip)">')
 
-        lines.append(f'<rect x="{field_x}" y="{field_y}" width="{field_w}" height="{field_h}" fill="{COLOR_FIELD_BG}" stroke="#78716c" stroke-width="2" rx="4" />')
-        lines.append(f'<rect x="{field_x}" y="{field_y}" width="{field_w}" height="{field_h}" fill="url(#soilGrid)" opacity="0.6" />')
+        # 1. Warm agricultural plowed soil background
+        field_w_px = L * scale
+        field_h_px = W * scale
+        lines.append(f'    <polygon points="{poly_svg_str}" fill="{COLOR_SOIL}" />')
 
-        # Headland / turn margins
-        hl_px = headland_margin_m * scale
-        lines.append(f'<line x1="{field_x + hl_px}" y1="{field_y}" x2="{field_x + hl_px}" y2="{field_y + field_h}" stroke="#a8a29e" stroke-dasharray="4,4" stroke-width="1" />')
-        lines.append(f'<line x1="{field_x + field_w - hl_px}" y1="{field_y}" x2="{field_x + field_w - hl_px}" y2="{field_y + field_h}" stroke="#a8a29e" stroke-dasharray="4,4" stroke-width="1" />')
+        # 2. Subtle plowed furrows texture overlay (parallel soil lines)
+        furrow_step_px = max(6.0, scale * 0.4)
+        num_furrows = int(field_h_px / furrow_step_px) + 2
+        for f_idx in range(num_furrows):
+            fy = margin_y + (f_idx * furrow_step_px)
+            lines.append(f'    <line x1="{margin_x - 10}" y1="{fy:.1f}" x2="{margin_x + field_w_px + 10}" y2="{fy:.1f}" stroke="#5c330a" stroke-width="1.2" opacity="0.45" />')
 
-        # Draw rows
+        # 3. Planting Rows and Pathways strictly inside clipped polygon
         for row in rows:
-            ry = field_y + (row.y_offset_m * scale)
-            rx = field_x + hl_px
-            rw = effective_length_m * scale
-            rh = max(2.0, row.width_m * scale * 0.45)
+            ry = sy(row.y_offset_m)
+            rx_start = sx(row.start_x_m)
+            rx_end = sx(row.end_x_m)
+            row_len_px = rx_end - rx_start
 
             if row.crop_key == "PATHWAY":
-                lines.append(f'<rect x="{field_x}" y="{ry}" width="{field_w}" height="{rh * 1.5}" fill="{row.color}" stroke="#cbd5e1" stroke-dasharray="3,3" />')
-                lines.append(f'<text x="{field_x + (field_w / 2)}" y="{ry + rh}" font-size="10" font-family="sans-serif" font-weight="600" fill="#64748b" text-anchor="middle">🚶 Walkway / Inspection Track ({req.pathway_width_m}m)</text>')
+                # Earthen spraying track / walking path
+                ph = max(4.0, row.width_m * scale * 0.7)
+                lines.append(f'    <rect x="{rx_start}" y="{ry - (ph / 2):.1f}" width="{row_len_px:.1f}" height="{ph:.1f}" fill="{row.color}" opacity="0.65" rx="2" />')
+                lines.append(f'    <line x1="{rx_start}" y1="{ry:.1f}" x2="{rx_end}" y2="{ry:.1f}" stroke="#d97706" stroke-dasharray="5,4" stroke-width="1.2" />')
+                lines.append(f'    <text x="{(rx_start + rx_end) / 2:.1f}" y="{ry + 3.5:.1f}" font-size="10" font-family="sans-serif" font-weight="700" fill="#78350f" text-anchor="middle">🚶 ಹಾದಿ / Sprayer Track ({req.pathway_width_m}m)</text>')
+
+            elif row.crop_key == "BORDER":
+                # Outer perimeter trap / border row
+                lines.append(f'    <line x1="{rx_start:.1f}" y1="{ry:.1f}" x2="{rx_end:.1f}" y2="{ry:.1f}" stroke="{row.color}" stroke-width="4" stroke-linecap="round" />')
+                step = max(24.0, row_len_px / 14.0)
+                n_dots = int(row_len_px / step)
+                for d in range(n_dots + 1):
+                    lines.append(f'    <circle cx="{rx_start + (d * step):.1f}" cy="{ry:.1f}" r="2" fill="#bbf7d0" />')
+
+            elif row.crop_key == "A":
+                # Primary Cereal: bold solid green line dotted with leaf glyphs
+                lines.append(f'    <line x1="{rx_start:.1f}" y1="{ry:.1f}" x2="{rx_end:.1f}" y2="{ry:.1f}" stroke="{COLOR_CROP_A}" stroke-width="4.2" stroke-linecap="round" />')
+                step = max(26.0, row_len_px / 15.0)
+                n_leaves = int(row_len_px / step)
+                for d in range(1, n_leaves):
+                    gx = rx_start + (d * step)
+                    lines.append(f'    <use href="#cropLeafGlyph" x="{gx:.1f}" y="{ry:.1f}" />')
+
             else:
-                # Crop planting row line
-                lines.append(f'<rect x="{rx}" y="{ry - (rh / 2)}" width="{rw}" height="{rh}" rx="{rh/2}" fill="{row.color}" opacity="0.85" filter="url(#rowGlow)" />')
-                # Plant dots indicator along the row
-                dot_step = max(18.0, rw / 18.0)
-                num_dots = int(rw / dot_step)
-                for d in range(num_dots + 1):
-                    dot_x = rx + (d * dot_step)
-                    dot_color = "#ffffff" if row.crop_key == "A" else "#fef08a"
-                    lines.append(f'<circle cx="{dot_x}" cy="{ry}" r="{max(1.5, rh * 0.28)}" fill="{dot_color}" opacity="0.9" />')
+                # Secondary Legume: amber-gold segmented dashes with blossom dots
+                lines.append(f'    <line x1="{rx_start:.1f}" y1="{ry:.1f}" x2="{rx_end:.1f}" y2="{ry:.1f}" stroke="{COLOR_CROP_B}" stroke-width="3.6" stroke-dasharray="9,6" stroke-linecap="round" />')
+                step = max(30.0, row_len_px / 12.0)
+                n_blossoms = int(row_len_px / step)
+                for d in range(1, n_blossoms):
+                    bx = rx_start + (d * step)
+                    lines.append(f'    <use href="#cropBlossomGlyph" x="{bx:.1f}" y="{ry:.1f}" />')
 
-                # Row label badge on the left margin
-                if row.row_number % 2 == 1 or row.row_number <= 6:
-                    lines.append(f'<text x="{field_x - 8}" y="{ry + 3}" font-size="9" font-family="sans-serif" font-weight="600" fill="#44403c" text-anchor="end">R{row.row_number} ({row.crop_key})</text>')
+        lines.append('  </g>')  # END OF CLIPPED FIELD GROUP
 
-        # Dimension Annotations: Length & Breadth
-        # Top dimension (Length)
-        lines.append(f'<line x1="{field_x}" y1="{margin - 20}" x2="{field_x + field_w}" y2="{margin - 20}" stroke="#0f172a" stroke-width="1.5" />')
-        lines.append(f'<path d="M {field_x} {margin - 25} L {field_x} {margin - 15} M {field_x + field_w} {margin - 25} L {field_x + field_w} {margin - 15}" stroke="#0f172a" stroke-width="1.5" />')
-        lines.append(f'<text x="{field_x + (field_w / 2)}" y="{margin - 28}" font-size="12" font-family="sans-serif" font-weight="bold" fill="#0f172a" text-anchor="middle">↔ Field Length: {L:.1f} m ({req.orientation})</text>')
+        # 4. Outer Physical Bund (ವರಂಬು / ಬದು)
+        lines.append(f'  <polygon points="{poly_svg_str}" fill="none" stroke="{COLOR_BUND}" stroke-width="3.5" stroke-dasharray="7,4" filter="url(#bundShadow)" />')
 
-        # Right dimension (Breadth)
-        right_dim_x = field_x + field_w + 20
-        lines.append(f'<line x1="{right_dim_x}" y1="{field_y}" x2="{right_dim_x}" y2="{field_y + field_h}" stroke="#0f172a" stroke-width="1.5" />')
-        lines.append(f'<path d="M {right_dim_x - 5} {field_y} L {right_dim_x + 5} {field_y} M {right_dim_x - 5} {field_y + field_h} L {right_dim_x + 5} {field_y + field_h}" stroke="#0f172a" stroke-width="1.5" />')
-        lines.append(f'<text x="{right_dim_x + 12}" y="{field_y + (field_h / 2)}" font-size="12" font-family="sans-serif" font-weight="bold" fill="#0f172a" transform="rotate(90, {right_dim_x + 12}, {field_y + (field_h / 2)})" text-anchor="middle">↕ Field Breadth: {W:.1f} m</text>')
+        # Outer bund label badge
+        p_first = poly_points[0]
+        p_sec = poly_points[1] if len(poly_points) > 1 else (L, 0)
+        bund_label_x = sx((p_first[0] + p_sec[0]) / 2.0)
+        bund_label_y = sy((p_first[1] + p_sec[1]) / 2.0) - 8
+        lines.append(f'  <text x="{bund_label_x:.1f}" y="{bund_label_y:.1f}" font-size="10" font-family="sans-serif" font-weight="700" fill="#78350f" text-anchor="middle">ವರಂಬು / ಬದು (Farm Bund)</text>')
 
-        # Scale ruler in bottom left
-        scale_10m_px = 10.0 * scale
-        lines.append(f'<rect x="{margin}" y="{svg_h - 25}" width="{scale_10m_px}" height="5" fill="#0f172a" />')
-        lines.append(f'<text x="{margin}" y="{svg_h - 12}" font-size="10" font-family="sans-serif" fill="#0f172a">Scale: 10 meters</text>')
+        # 5. Farmer-Centric Measurement Brackets (no scientific Cartesian ticks)
+        # Top bracket: Field Length
+        bracket_y = margin_y - 20
+        lines.append(f'  <path d="M {margin_x} {bracket_y + 6} L {margin_x} {bracket_y} L {margin_x + field_w_px} {bracket_y} L {margin_x + field_w_px} {bracket_y + 6}" fill="none" stroke="#451a03" stroke-width="2" />')
+        lines.append(f'  <text x="{margin_x + (field_w_px / 2):.1f}" y="{bracket_y - 6:.1f}" font-size="12" font-family="sans-serif" font-weight="800" fill="#451a03" text-anchor="middle">ಉದ್ದ: {L:.1f} ಮೀ (Length: {L:.1f}m) • {req.orientation}</text>')
 
-        # Compass Indicator (Top-Right)
-        comp_cx = field_x + field_w - 30
-        comp_cy = margin + 30
-        lines.append(f'<circle cx="{comp_cx}" cy="{comp_cy}" r="18" fill="#ffffff" stroke="#047857" stroke-width="1.5" />')
-        lines.append(f'<polygon points="{comp_cx},{comp_cy - 14} {comp_cx - 5},{comp_cy + 10} {comp_cx},{comp_cy + 4} {comp_cx + 5},{comp_cy + 10}" fill="#047857" />')
-        lines.append(f'<text x="{comp_cx}" y="{comp_cy - 16}" font-size="10" font-weight="bold" fill="#047857" text-anchor="middle">N</text>')
+        # Right bracket: Field Breadth
+        bracket_x = margin_x + field_w_px + 20
+        lines.append(f'  <path d="M {bracket_x - 6} {margin_y} L {bracket_x} {margin_y} L {bracket_x} {margin_y + field_h_px} L {bracket_x - 6} {margin_y + field_h_px}" fill="none" stroke="#451a03" stroke-width="2" />')
+        lines.append(f'  <text x="{bracket_x + 16:.1f}" y="{margin_y + (field_h_px / 2):.1f}" font-size="12" font-family="sans-serif" font-weight="800" fill="#451a03" text-anchor="middle" transform="rotate(90, {bracket_x + 16:.1f}, {margin_y + (field_h_px / 2):.1f})">ಅಗಲ: {W:.1f} ಮೀ (Breadth: {W:.1f}m)</text>')
 
+        # 6. Rural Compass Indicator (Top-Right)
+        comp_cx = margin_x + field_w_px - 26
+        comp_cy = margin_y + 26
+        lines.append(f'  <circle cx="{comp_cx}" cy="{comp_cy}" r="17" fill="#ffffff" stroke="#15803d" stroke-width="1.8" opacity="0.95" />')
+        lines.append(f'  <polygon points="{comp_cx},{comp_cy - 12} {comp_cx - 4.5},{comp_cy + 8} {comp_cx},{comp_cy + 3} {comp_cx + 4.5},{comp_cy + 8}" fill="#15803d" />')
+        lines.append(f'  <text x="{comp_cx}" y="{comp_cy - 14}" font-size="9" font-family="sans-serif" font-weight="bold" fill="#15803d" text-anchor="middle">ಉತ್ತರ (N)</text>')
+
+        # Close SVG
         lines.append('</svg>')
         return "\n".join(lines), viewbox, round(scale, 2)
 

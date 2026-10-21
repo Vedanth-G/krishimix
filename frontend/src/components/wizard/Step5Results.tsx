@@ -200,6 +200,8 @@ export const Step5Results: React.FC<Step5Props> = ({
           reasons={evaluation.unsupported_reasons}
           alternatives={evaluation.alternatives}
           onSelectAlternative={onSelectAlternative}
+          cropAName={cropAName}
+          cropBName={cropBName}
         />
       ) : (
         /* If Supported, Render Performance Cards, Realistic Risk Matrix, & Tabbed Views */

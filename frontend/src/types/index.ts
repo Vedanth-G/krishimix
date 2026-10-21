@@ -146,6 +146,8 @@ export interface LayoutRowItem {
   length_m: number;
   plants_in_row: number;
   plant_spacing_m: number;
+  start_x_m?: number;
+  end_x_m?: number;
 }
 
 export interface DimensionTableEntry {
@@ -175,6 +177,10 @@ export interface PlantingLayoutData {
   legend: Array<{ label: string; color: string; type: string }>;
   orientation: string;
   warnings: string[];
+  shape_type?: string;
+  polygon_points?: number[][];
+  min_row_length_m?: number;
+  max_row_length_m?: number;
 }
 
 export interface ResourceAssumptions {

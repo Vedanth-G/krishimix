@@ -9,9 +9,11 @@ class LayoutRowItem(BaseModel):
     color: str
     y_offset_m: float
     width_m: float
-    length_m: float
+    length_m: float  # Cut row length conforming to field boundary
     plants_in_row: int
     plant_spacing_m: float
+    start_x_m: float = 0.0
+    end_x_m: float = 0.0
 
 class DimensionTableEntry(BaseModel):
     crop_name: str
@@ -39,6 +41,10 @@ class PlantingLayoutData(BaseModel):
     legend: List[dict]
     orientation: str
     warnings: List[str] = []
+    shape_type: str = "Regular"
+    polygon_points: List[List[float]] = []
+    min_row_length_m: float = 0.0
+    max_row_length_m: float = 0.0
 
 class LayoutGenerateRequest(BaseModel):
     field_length_m: float = Field(..., gt=0, description="Field length in meters")
@@ -56,3 +62,4 @@ class LayoutGenerateRequest(BaseModel):
     pathway_frequency_rows: int = 12
     pathway_width_m: float = 0.8
     orientation: str = "North-South"
+    shape_type: Optional[str] = "Regular"
